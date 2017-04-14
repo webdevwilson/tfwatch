@@ -25,21 +25,28 @@ type Executor interface {
 	GetResult(guid string) (Result, error)
 }
 
+// Result contains the results of a task
+type Result struct {
+	ScheduledTask *ScheduledTask
+	ExitCode      int
+	Output        []byte
+}
+
 type executor struct {
-	store    *persist.Store
-	taskCh   chan Task
+	store    persist.Store
+	taskCh   chan ScheduledTask
 	resultCh chan *Result
 }
 
 // NewExecutor creates returns a pointer to
 func NewExecutor(store persist.Store) (exe Executor) {
-	taskQueue := make(chan Task, 50)
+	taskQueue := make(chan ScheduledTask, 50)
 	resultQueue := make(chan *Result, 50)
 
 	exe = &executor{
-		store:       store,
-		taskQueue:   taskQueue,
-		resultQueue: resultQueue,
+		store:    store,
+		taskCh:   taskQueue,
+		resultCh: resultQueue,
 	}
 
 	store.CreateNamespace(persistNamespace)
@@ -52,7 +59,7 @@ func NewExecutor(store persist.Store) (exe Executor) {
 }
 
 // runTasks dequeues
-func (exe executor) runTasks() {
+func (exe *executor) runTasks() {
 
 	// gracefully recover from panics
 	defer func() {
@@ -63,14 +70,14 @@ func (exe executor) runTasks() {
 	}()
 
 	for t := range exe.taskCh {
-		log.Printf("[INFO] Executing %s", t.string())
+		log.Printf("[INFO] Executing %s", t.String())
 		cmd := exec.Command(t.Command, t.Args...)
 
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
 			if _, ok := err.(*exec.ExitError); !ok {
-				log.Printf("[ERROR] Error executing %s: %s", t.string(), err)
+				log.Printf("[ERROR] Error executing %s: %s", t.String(), err)
 			}
 		}
 
@@ -100,7 +107,7 @@ func (exe executor) persistResults() {
 }
 
 // Schedule schedules a job to be run
-func (exe executor) Schedule(command string, args ...string) (st ScheduledTask, err error) {
+func (exe executor) Schedule(command string, args ...string) (st *ScheduledTask, err error) {
 	uidPtr, err := uuid.NewV4()
 
 	if err != nil {
@@ -116,9 +123,9 @@ func (exe executor) Schedule(command string, args ...string) (st ScheduledTask, 
 		ch,
 	}
 
-	log.Printf("[INFO] Scheduling %s", t.string())
+	log.Printf("[INFO] Scheduling %s", st.String())
 
-	taskQueue <- t
+	exe.taskCh <- st
 
 	return
 }

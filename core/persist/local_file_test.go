@@ -193,7 +193,7 @@ func Test_Delete(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = store.Delete(t.Name(), guid)
+	_ = store.Delete(t.Name(), guid)
 
 	if err != nil {
 		t.Error(err)
@@ -201,7 +201,27 @@ func Test_Delete(t *testing.T) {
 
 	var data data
 	err = store.Get(t.Name(), guid, &data)
-	if err != nil && !os.IsNotExist(err) {
+	_, notExist := err.(*NotFoundError)
+	if err != nil && !notExist {
 		t.Error(err)
 	}
+}
+
+func Test_HasNamespace_Returns_False_When_Namespace_Not_Created(t *testing.T) {
+	store, cleanup := createStore()
+	defer cleanup()
+
+	assert.Equal(t, false, store.HasNamespace(t.Name()))
+}
+
+func Test_HasNamespace_Returns_True_When_Namespace_Is_Created(t *testing.T) {
+	store, cleanup := createStore()
+	defer cleanup()
+
+	err := store.CreateNamespace(t.Name())
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, true, store.HasNamespace(t.Name()))
 }

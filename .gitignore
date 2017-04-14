@@ -1,2 +1,4 @@
 .state
 main
+terraform-ci
+doc
