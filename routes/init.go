@@ -1,0 +1,66 @@
+package routes
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"runtime/debug"
+	"sync"
+
+	"github.com/gorilla/mux"
+)
+
+// Route function interface
+type Route func(*http.Request) (interface{}, error)
+
+type router struct {
+	instance *mux.Router
+	init     sync.Once
+}
+
+// should not be accessed outside Router()
+var _router = &router{}
+
+// Router returns the router to map to
+func Router() *mux.Router {
+	_router.init.Do(func() {
+		log.Printf("[DEBUG] Initializing router")
+		_router.instance = mux.NewRouter()
+	})
+	return _router.instance
+}
+
+// register a handler
+func register(path string, handler Route) {
+	log.Printf("[DEBUG] Registering route %s", path)
+	r := Router()
+	r.HandleFunc(path, wrapHandler(handler))
+}
+
+// wrapHandler wraps handler functions
+func wrapHandler(handler Route) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		log.Printf("[INFO] %s", req.URL)
+
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("[ERROR] Handler recovered from panic: %s\n%s", r, debug.Stack())
+			}
+		}()
+
+		data, err := handler(req)
+		if err != nil {
+			log.Printf("[ERROR] Error in handler '%s': %s", req.URL, err)
+			resp.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		resp.Header().Add("Content-Type", "application/json")
+		err = json.NewEncoder(resp).Encode(data)
+		if err != nil {
+			log.Printf("[ERROR] Error encoding response '%s': %s", req.URL, err)
+			resp.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+}
