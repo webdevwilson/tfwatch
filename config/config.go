@@ -6,16 +6,17 @@ import (
 	"path"
 
 	"github.com/hashicorp/logutils"
-	"github.com/webdevwilson/terraform-ui/core/persist"
-	"github.com/webdevwilson/terraform-ui/core/task"
+	"github.com/webdevwilson/terraform-ui/persist"
+	"github.com/webdevwilson/terraform-ui/task"
 )
 
 // Settings contains all the configuration values for the service
 type Settings struct {
 	LogLevel string
 	SiteRoot string
+	Port     string
 	Store    persist.Store
-	Executor task.Executor
+	Executor *task.Executor
 }
 
 var settings *Settings
@@ -23,7 +24,11 @@ var settings *Settings
 func init() {
 
 	// create the persistent store
-	store := persist.NewLocalFileStore(envOrFunc("STATE_PATH", defaultStatePath))
+	store, err := persist.NewLocalFileStore(envOrFunc("STATE_PATH", defaultStatePath))
+
+	if err != nil {
+		log.Fatalf("[FATAL] Error initializing persistence: %s", err)
+	}
 
 	executor := task.NewExecutor(store)
 
@@ -31,6 +36,7 @@ func init() {
 	settings = &Settings{
 		envOr("LOG_LEVEL", "INFO"),
 		envOrFunc("SITE_ROOT", defaultSiteRoot),
+		envOr("PORT", "3000"),
 		store,
 		executor,
 	}

@@ -13,8 +13,11 @@ type Store interface {
 	// Get retrieves a value from the Store by guid
 	Get(ns, guid string, value interface{}) error
 
-	// Save stores a value, and returns the guid, if any error is returned, nothing is saved
-	Save(ns string, value interface{}) (string, error)
+	// Create stores a value, and returns the guid, if any error is returned, nothing is saved
+	Create(ns string, value interface{}) (string, error)
+
+	// Update updates a stored value, if value does not exist, an error is returned
+	Update(ns, guid string, value interface{}) error
 
 	// Delete removes a value from the key-value store
 	Delete(ns, guid string) error

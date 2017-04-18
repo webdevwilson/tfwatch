@@ -58,7 +58,7 @@ func Test_CreateNamespace(t *testing.T) {
 	}
 }
 
-func Test_Save(t *testing.T) {
+func Test_Create(t *testing.T) {
 	store, cleanup := createStore()
 	defer cleanup()
 
@@ -67,7 +67,7 @@ func Test_Save(t *testing.T) {
 		t.Error(err)
 	}
 
-	guid, err := store.Save(t.Name(), &data{"name", 12})
+	guid, err := store.Create(t.Name(), &data{"name", 12})
 	if err != nil {
 		t.Error(err)
 	}
@@ -77,6 +77,41 @@ func Test_Save(t *testing.T) {
 	if err != nil {
 		t.Errorf("Invalid guid '%s': %s", guid, err)
 	}
+}
+
+func Test_Create_No_Existing_Namespace(t *testing.T) {
+	store, cleanup := createStore()
+	defer cleanup()
+
+	_, err := store.Create(t.Name(), &data{"name", 12})
+	if err == nil {
+		t.Fail()
+	}
+}
+
+func Test_Update_Existing_Value(t *testing.T) {
+	store, cleanup := createStore()
+	defer cleanup()
+
+	err := store.CreateNamespace(t.Name())
+	if err != nil {
+		t.Error(err)
+	}
+
+	val := &data{"name", 12}
+	guid, err := store.Create(t.Name(), val)
+	if err != nil {
+		t.Error(err)
+	}
+
+	val = &data{"abc", 34}
+	err = store.Update(t.Name(), guid, val)
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, "abc", val.Name)
+	assert.Equal(t, 34, val.Count)
 }
 
 func Test_List(t *testing.T) {
@@ -91,7 +126,7 @@ func Test_List(t *testing.T) {
 	guids := make([]string, len(testData))
 
 	for i, data := range testData {
-		guid, err := store.Save(t.Name(), data)
+		guid, err := store.Create(t.Name(), data)
 		if err != nil {
 			t.Error(err)
 		}
@@ -111,13 +146,11 @@ func Test_List_When_Namespace_Doesnt_Exist(t *testing.T) {
 	store, cleanup := createStore()
 	defer cleanup()
 
-	test, err := store.List(t.Name())
+	_, err := store.List(t.Name())
 
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Fail()
 	}
-
-	assert.Equal(t, 0, len(test))
 }
 
 func Test_Get(t *testing.T) {
@@ -132,7 +165,7 @@ func Test_Get(t *testing.T) {
 	// persist test data
 	guids := make([]string, len(testData))
 	for i, data := range testData {
-		guid, err := store.Save(t.Name(), data)
+		guid, err := store.Create(t.Name(), data)
 		if err != nil {
 			t.Error(err)
 		}
@@ -168,15 +201,16 @@ func Test_Get_NonExisting_returns_nil(t *testing.T) {
 	assert.Equal(t, true, ok, "Expected NotFoundError, Got: %s", err)
 }
 
-func Test_Get_NonExisting_returns_nil_When_Namespace_Doesnt_Exist(t *testing.T) {
+func Test_Get_NonExisting_returns_error_When_Namespace_Doesnt_Exist(t *testing.T) {
 	store, cleanup := createStore()
 	defer cleanup()
 
 	var value data
 	err := store.Get(t.Name(), "NON-EXISTING", value)
 
-	_, ok := err.(*NotFoundError)
-	assert.Equal(t, true, ok)
+	if err == nil {
+		t.Fail()
+	}
 }
 
 func Test_Delete(t *testing.T) {
@@ -188,7 +222,7 @@ func Test_Delete(t *testing.T) {
 		t.Error(err)
 	}
 
-	guid, err := store.Save(t.Name(), &data{"name", 12})
+	guid, err := store.Create(t.Name(), &data{"name", 12})
 	if err != nil {
 		t.Error(err)
 	}

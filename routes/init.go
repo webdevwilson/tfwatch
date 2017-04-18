@@ -8,33 +8,46 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
+	"github.com/webdevwilson/terraform-ui/config"
+	"github.com/webdevwilson/terraform-ui/persist"
 )
 
 // Route function interface
 type Route func(*http.Request) (interface{}, error)
 
-type router struct {
+var routerSingleton struct {
 	instance *mux.Router
 	init     sync.Once
 }
 
-// should not be accessed outside Router()
-var _router = &router{}
+var storeSingleton struct {
+	instance persist.Store
+	init     sync.Once
+}
 
 // Router returns the router to map to
 func Router() *mux.Router {
-	_router.init.Do(func() {
+	routerSingleton.init.Do(func() {
 		log.Printf("[DEBUG] Initializing router")
-		_router.instance = mux.NewRouter()
+		routerSingleton.instance = mux.NewRouter()
 	})
-	return _router.instance
+	return routerSingleton.instance
+}
+
+// Store returns the store
+func Store() persist.Store {
+	storeSingleton.init.Do(func() {
+		storeSingleton.instance = config.Get().Store
+	})
+	return storeSingleton.instance
 }
 
 // register a handler
-func register(path string, handler Route) {
+func register(path string, handler Route) (r *mux.Router) {
 	log.Printf("[DEBUG] Registering route %s", path)
-	r := Router()
+	r = Router()
 	r.HandleFunc(path, wrapHandler(handler))
+	return
 }
 
 // wrapHandler wraps handler functions

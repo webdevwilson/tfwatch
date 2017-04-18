@@ -2,28 +2,18 @@ package task
 
 import (
 	"log"
-	"os"
-	"path"
 
 	"os/exec"
-
-	"encoding/gob"
 
 	"syscall"
 
 	"runtime/debug"
 
 	uuid "github.com/nu7hatch/gouuid"
-	"github.com/webdevwilson/terraform-ui/core/persist"
+	"github.com/webdevwilson/terraform-ui/persist"
 )
 
 const persistNamespace = "executions"
-
-// Executor is responsible for executing commands and persisting results
-type Executor interface {
-	Schedule(cmd string, args ...string) (*ScheduledTask, error)
-	GetResult(guid string) (Result, error)
-}
 
 // Result contains the results of a task
 type Result struct {
@@ -32,18 +22,18 @@ type Result struct {
 	Output        []byte
 }
 
-type executor struct {
+type Executor struct {
 	store    persist.Store
 	taskCh   chan ScheduledTask
 	resultCh chan *Result
 }
 
 // NewExecutor creates returns a pointer to
-func NewExecutor(store persist.Store) (exe Executor) {
+func NewExecutor(store persist.Store) (exe *Executor) {
 	taskQueue := make(chan ScheduledTask, 50)
 	resultQueue := make(chan *Result, 50)
 
-	exe = &executor{
+	exe = &Executor{
 		store:    store,
 		taskCh:   taskQueue,
 		resultCh: resultQueue,
@@ -59,7 +49,7 @@ func NewExecutor(store persist.Store) (exe Executor) {
 }
 
 // runTasks dequeues
-func (exe *executor) runTasks() {
+func (exe *Executor) runTasks() {
 
 	// gracefully recover from panics
 	defer func() {
@@ -84,30 +74,30 @@ func (exe *executor) runTasks() {
 		log.Printf("[INFO] Stdout: %s", output)
 
 		// read the exit code
-		status, ok := cmd.ProcessState.Sys().(*syscall.WaitStatus)
+		_, ok := cmd.ProcessState.Sys().(*syscall.WaitStatus)
 		if !ok {
 			log.Printf("[ERROR] Error reading process status.")
 		}
 
-		result := &Result{
-			&t,
-			status.ExitStatus(),
-			output,
-		}
-		result.Task.writeChannel <- result
-		resultQueue <- result
+		// result := &Result{
+		// 	&t,
+		// 	status.ExitStatus(),
+		// 	output,
+		// }
+		// result.Task.writeChannel <- result
+		// resultQueue <- result
 	}
 }
 
 // persistResults reads from resultChannel
-func (exe executor) persistResults() {
+func (exe *Executor) persistResults() {
 	for r := range exe.resultCh {
-		exe.store.Save(persistNamespace, r)
+		exe.store.Create(persistNamespace, r)
 	}
 }
 
 // Schedule schedules a job to be run
-func (exe executor) Schedule(command string, args ...string) (st *ScheduledTask, err error) {
+func (exe *Executor) Schedule(command string, args ...string) (st *ScheduledTask, err error) {
 	uidPtr, err := uuid.NewV4()
 
 	if err != nil {
@@ -125,21 +115,21 @@ func (exe executor) Schedule(command string, args ...string) (st *ScheduledTask,
 
 	log.Printf("[INFO] Scheduling %s", st.String())
 
-	exe.taskCh <- st
+	// exe.taskCh <- st
 
 	return
 }
 
 // GetResult returns a result from disk
-func (exe executor) GetResult(guid string) (r Result, err error) {
-	f, err := os.Open(path.Join(resultPath, guid))
+func (exe *Executor) GetResult(guid string) (r Result, err error) {
+	// f, err := os.Open(path.Join(resultPath, guid))
 
 	if err != nil {
 		return
 	}
 
 	// read in the value
-	err = gob.NewDecoder(f).Decode(&r)
+	// err = gob.NewDecoder(f).Decode(&r)
 
 	return
 }

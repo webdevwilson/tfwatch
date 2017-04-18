@@ -8,6 +8,8 @@ import (
 
 	"sync"
 
+	"fmt"
+
 	uuid "github.com/nu7hatch/gouuid"
 )
 
@@ -35,7 +37,8 @@ func NewLocalFileStore(p string) (store Store, err error) {
 func (localFileStore *localFileStore) List(ns string) (guids []string, err error) {
 
 	if !localFileStore.HasNamespace(ns) {
-		localFileStore.CreateNamespace(ns)
+		err = fmt.Errorf("Namespace %s does not exist", ns)
+		return
 	}
 
 	// Insure the namespace exists
@@ -61,10 +64,10 @@ func (localFileStore *localFileStore) List(ns string) (guids []string, err error
 }
 
 // Get returns
-func (localFileStore *localFileStore) Get(ns, guid string, value interface{}) (err error) {
+func (localFileStore *localFileStore) Get(ns, guid string, value interface{}) error {
 
 	if !localFileStore.HasNamespace(ns) {
-		localFileStore.CreateNamespace(ns)
+		return fmt.Errorf("Namespace %s does not exist", ns)
 	}
 
 	localFileStore.Lock(ns)
@@ -72,9 +75,9 @@ func (localFileStore *localFileStore) Get(ns, guid string, value interface{}) (e
 
 	// ensure the directory exists
 	nsPath := path.Join(localFileStore.path, ns)
-	err = os.MkdirAll(nsPath, os.ModePerm)
+	err := os.MkdirAll(nsPath, os.ModePerm)
 	if err != nil {
-		return
+		return err
 	}
 
 	fp := path.Join(nsPath, guid)
@@ -85,78 +88,95 @@ func (localFileStore *localFileStore) Get(ns, guid string, value interface{}) (e
 		if os.IsNotExist(err) {
 			err = &NotFoundError{err}
 		}
-		return
+		return err
 	}
 
-	err = gob.NewDecoder(f).Decode(value)
-
-	return
+	return gob.NewDecoder(f).Decode(value)
 }
 
-func (localFileStore *localFileStore) Save(ns string, value interface{}) (guid string, err error) {
+func (localFileStore *localFileStore) Create(ns string, value interface{}) (string, error) {
+
+	if !localFileStore.HasNamespace(ns) {
+		return "", fmt.Errorf("Namespace %s does not exist", ns)
+	}
 
 	localFileStore.Lock(ns)
 	defer localFileStore.Unlock(ns)
 
-	if !localFileStore.HasNamespace(ns) {
-		localFileStore.CreateNamespace(ns)
-	}
-
 	// create a guid
-	var guidPtr *uuid.UUID
-	guidPtr, err = uuid.NewV4()
+	guidPtr, err := uuid.NewV4()
 	if err != nil {
-		return
+		return "", err
 	}
-	guid = guidPtr.String()
+	guid := guidPtr.String()
 
 	// open file
 	p := path.Join(localFileStore.path, ns, guid)
 	f, err := os.Create(p)
 	if err != nil {
-		return
+		return "", err
 	}
 
 	// write to file
 	err = gob.NewEncoder(f).Encode(value)
 	if err != nil {
-		return
+		return "", err
 	}
 
-	return
+	if _, err = os.Stat(p); os.IsNotExist(err) {
+		return "", err
+	}
+
+	return guid, nil
 }
 
-func (localFileStore *localFileStore) Delete(ns, guid string) (err error) {
+func (localFileStore *localFileStore) Update(ns, guid string, value interface{}) error {
+
+	if !localFileStore.HasNamespace(ns) {
+		return fmt.Errorf("Namespace %s does not exist", ns)
+	}
 
 	localFileStore.Lock(ns)
 	defer localFileStore.Unlock(ns)
 
-	if !localFileStore.HasNamespace(ns) {
-		err = localFileStore.CreateNamespace(ns)
-		if err != nil {
-			return err
-		}
+	p := path.Join(localFileStore.path, ns, guid)
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return fmt.Errorf("guid '%s' does not exist", guid)
 	}
 
+	f, err := os.OpenFile(p, os.O_WRONLY, 0666)
+	if err != nil {
+		return err
+	}
+	return gob.NewEncoder(f).Encode(value)
+}
+
+func (localFileStore *localFileStore) Delete(ns, guid string) error {
+
+	if !localFileStore.HasNamespace(ns) {
+		return fmt.Errorf("Namespace %s does not exist", ns)
+	}
+
+	localFileStore.Lock(ns)
+	defer localFileStore.Unlock(ns)
+
 	p := path.Join(localFileStore.path, ns, guid)
-	err = os.Remove(p)
-	return
+	return os.Remove(p)
 }
 
 // CreateNamespace ensures a namespace is configured
-func (localFileStore *localFileStore) CreateNamespace(ns string) (err error) {
+func (localFileStore *localFileStore) CreateNamespace(ns string) error {
 
 	localFileStore.lock.Lock()
 	defer localFileStore.lock.Unlock()
 
 	if localFileStore.HasNamespace(ns) {
-		return
+		return nil
 	}
 
 	nsPath := path.Join(localFileStore.path, ns)
 	localFileStore.nsLocks[ns] = &sync.Mutex{}
-	err = os.MkdirAll(nsPath, os.ModePerm)
-	return
+	return os.MkdirAll(nsPath, os.ModePerm)
 }
 
 func (localFileStore *localFileStore) HasNamespace(ns string) (ok bool) {
