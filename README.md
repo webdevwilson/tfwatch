@@ -11,8 +11,9 @@ Continuous integration service for [Terraform](https://terraform.io).
 * Review and apply plans
 
 ## Configuration
-* PORT - The port the HTTP server will bind to
-* CHECKOUT_DIR - The directory that contains Terraform repositories. These must have a terraform.tfplan in them.
+* PORT - (default: 3000) The port the HTTP server will bind to
+* CHECKOUT_DIR - (default: .state/projects) The directory that contains Terraform repositories. These must have a terraform.tfplan in them.
+* STATE_PATH - (default: .state) The location where state is stored on disk
 * LOG_LEVEL
 
 ## Developing
