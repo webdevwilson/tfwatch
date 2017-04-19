@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/gorilla/mux"
-	"github.com/webdevwilson/terraform-ui/model"
+	"github.com/webdevwilson/terraform-ci/model"
 )
 
 func init() {

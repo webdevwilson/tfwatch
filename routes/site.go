@@ -1,6 +1,6 @@
 package routes
 
-import "github.com/webdevwilson/terraform-ui/config"
+import "github.com/webdevwilson/terraform-ci/config"
 
 func init() {
 	//r := Router()

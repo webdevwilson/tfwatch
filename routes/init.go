@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
-	"github.com/webdevwilson/terraform-ui/config"
-	"github.com/webdevwilson/terraform-ui/persist"
+	"github.com/webdevwilson/terraform-ci/config"
+	"github.com/webdevwilson/terraform-ci/persist"
 )
 
 // Route function interface

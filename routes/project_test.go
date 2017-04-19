@@ -14,8 +14,8 @@ import (
 	"strings"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/webdevwilson/terraform-ui/config"
-	"github.com/webdevwilson/terraform-ui/model"
+	"github.com/webdevwilson/terraform-ci/config"
+	"github.com/webdevwilson/terraform-ci/model"
 )
 
 var prjs = []model.Project{

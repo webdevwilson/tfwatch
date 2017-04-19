@@ -7,17 +7,18 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/logutils"
-	"github.com/webdevwilson/terraform-ui/persist"
-	"github.com/webdevwilson/terraform-ui/task"
+	"github.com/webdevwilson/terraform-ci/persist"
+	"github.com/webdevwilson/terraform-ci/task"
 )
 
 // Settings contains all the configuration values for the service
 type Settings struct {
-	LogLevel string
-	SiteRoot string
-	Port     int
-	Store    persist.Store
-	Executor *task.Executor
+	LogLevel          string
+	SiteRoot          string
+	CheckoutDirectory string
+	Port              int
+	Store             persist.Store
+	Executor          *task.Executor
 }
 
 var settings *Settings
@@ -33,10 +34,17 @@ func init() {
 
 	executor := task.NewExecutor(store)
 
+	workingDir, err := os.Getwd()
+
+	if err != nil {
+		log.Fatalf("[FATAL] Failed to get current working directory: %s", workingDir)
+	}
+
 	// initialize settings
 	settings = &Settings{
 		envOr("LOG_LEVEL", "INFO"),
-		envOrFunc("SITE_ROOT", defaultSiteRoot),
+		envOr("SITE_ROOT", path.Join(workingDir, "site", "dist")),
+		envOr("CHECKOUT_DIR", path.Join(workingDir, ".state", "projects")),
 		envOrInt("PORT", 3000),
 		store,
 		executor,
@@ -63,15 +71,6 @@ func defaultStatePath() (statePath string) {
 		log.Fatalf("[FATAL] Failed to get current working directory: %s", wd)
 	}
 	statePath = path.Join(wd, ".state")
-	return
-}
-
-func defaultSiteRoot() (siteRoot string) {
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to get current working directory: %s", wd)
-	}
-	siteRoot = path.Join(wd, "site", "dist")
 	return
 }
 

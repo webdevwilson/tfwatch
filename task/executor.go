@@ -10,7 +10,7 @@ import (
 	"runtime/debug"
 
 	uuid "github.com/nu7hatch/gouuid"
-	"github.com/webdevwilson/terraform-ui/persist"
+	"github.com/webdevwilson/terraform-ci/persist"
 )
 
 const persistNamespace = "executions"

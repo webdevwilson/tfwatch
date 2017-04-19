@@ -1,8 +1,8 @@
 package model
 
 import (
-	"github.com/webdevwilson/terraform-ui/config"
-	"github.com/webdevwilson/terraform-ui/persist"
+	"github.com/webdevwilson/terraform-ci/config"
+	"github.com/webdevwilson/terraform-ci/persist"
 )
 
 const projectNS = "projects"
@@ -32,6 +32,7 @@ func ListProjects() (projects []Project, err error) {
 	projects = make([]Project, len(guids))
 	for i, guid := range guids {
 		err = store.Get(projectNS, guid, &projects[i])
+		projects[i].GUID = guid
 		if err != nil {
 			return
 		}
@@ -51,6 +52,28 @@ func GetProject(guid string) (*Project, error) {
 
 	prj.GUID = guid
 	return &prj, err
+}
+
+// GetProjectByName returns the named project
+func GetProjectByName(name string) (*Project, error) {
+
+	projects, err := store.List(projectNS)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, guid := range projects {
+		prj, err := GetProject(guid)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if prj.Name == name {
+			return prj, nil
+		}
+	}
+	return nil, nil
 }
 
 // CreateProject
