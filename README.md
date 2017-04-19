@@ -10,7 +10,15 @@ Continuous integration service for [Terraform](https://terraform.io).
 * Generates plans when changes committed to source
 * Review and apply plans
 
+## Configuration
+* PORT - The port the HTTP server will bind to
+* CHECKOUT_DIR - The directory that contains Terraform repositories. These must have a terraform.tfplan in them.
+* LOG_LEVEL
+
 ## Developing
+
+You can download the latest release from the [Releases](https://github.com/webdevwilson/terraform-ci/releases) page.
+
 * Backend written in go
 * Frontend vue.js app
 
