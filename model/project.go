@@ -8,7 +8,7 @@ import (
 const projectNS = "projects"
 
 type Project struct {
-	GUID     string `json:"omitempty"`
+	GUID     string `json:"GUID,omitempty"`
 	Name     string
 	RepoURL  string
 	RepoPath string
@@ -42,15 +42,15 @@ func ListProjects() (projects []Project, err error) {
 
 // GetProject
 func GetProject(guid string) (*Project, error) {
-	var prj *Project
-	err := store.Get(projectNS, guid, prj)
+	var prj Project
+	err := store.Get(projectNS, guid, &prj)
 
 	if err != nil {
 		return nil, err
 	}
 
 	prj.GUID = guid
-	return prj, err
+	return &prj, err
 }
 
 // CreateProject

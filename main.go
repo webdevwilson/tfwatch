@@ -10,13 +10,11 @@ import (
 	_ "github.com/webdevwilson/terraform-ui/task"
 )
 
-const port = 3000
-
 func main() {
-
+	port := config.Get().Port
 	log.Print(fmt.Sprintf("[INFO] Listening on port %d ...", port))
 
-	routes.StartServer(config.Get().Port)
+	routes.StartServer(port)
 
 	for {
 	}

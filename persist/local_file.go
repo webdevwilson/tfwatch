@@ -33,6 +33,18 @@ func NewLocalFileStore(p string) (store Store, err error) {
 	return
 }
 
+// Destroy
+func (lfs *localFileStore) Destroy() (err error) {
+	l := make(map[string]*sync.Mutex)
+	err = os.RemoveAll(lfs.path)
+	lfs = &localFileStore{
+		lfs.path,
+		&sync.Mutex{},
+		l,
+	}
+	return
+}
+
 // List returns the keys stored in a namespace
 func (localFileStore *localFileStore) List(ns string) (guids []string, err error) {
 
@@ -182,6 +194,18 @@ func (localFileStore *localFileStore) CreateNamespace(ns string) error {
 func (localFileStore *localFileStore) HasNamespace(ns string) (ok bool) {
 	_, ok = localFileStore.nsLocks[ns]
 	return
+}
+
+func (localFileStore *localFileStore) RemoveNamespace(ns string) error {
+	localFileStore.Lock(ns)
+	nsPath := path.Join(localFileStore.path, ns)
+	err := os.RemoveAll(nsPath)
+	if err != nil {
+		localFileStore.Unlock(ns)
+		return err
+	}
+	delete(localFileStore.nsLocks, ns)
+	return nil
 }
 
 func (localFileStore *localFileStore) Lock(ns string) {

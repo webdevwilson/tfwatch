@@ -12,7 +12,7 @@ import (
 func init() {
 	r := Router()
 	r.HandleFunc("/api/projects", wrapHandler(projectList)).Methods("GET")
-	r.HandleFunc("/api/projects/{guid}", wrapHandler(projectList)).Methods("GET")
+	r.HandleFunc("/api/projects/{guid}", wrapHandler(projectGet)).Methods("GET")
 	r.HandleFunc("/api/projects", wrapHandler(projectCreate)).Methods("PUT")
 	r.HandleFunc("/api/projects/{guid}", wrapHandler(projectUpdate)).Methods("POST")
 	r.HandleFunc("/api/projects/{guid}", wrapHandler(projectDelete)).Methods("DELETE")

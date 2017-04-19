@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/hashicorp/logutils"
 	"github.com/webdevwilson/terraform-ui/persist"
@@ -14,7 +15,7 @@ import (
 type Settings struct {
 	LogLevel string
 	SiteRoot string
-	Port     string
+	Port     int
 	Store    persist.Store
 	Executor *task.Executor
 }
@@ -36,20 +37,18 @@ func init() {
 	settings = &Settings{
 		envOr("LOG_LEVEL", "INFO"),
 		envOrFunc("SITE_ROOT", defaultSiteRoot),
-		envOr("PORT", "3000"),
+		envOrInt("PORT", 3000),
 		store,
 		executor,
 	}
 
-	log.Printf("[INFO] Log level set to %s", settings.LogLevel)
-
-	// configure logging
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
 		MinLevel: logutils.LogLevel(settings.LogLevel),
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(filter)
+	log.Printf("[INFO] Log level set to %s", settings.LogLevel)
 }
 
 // Get returns configuration data
@@ -90,6 +89,25 @@ func envOr(name string, defaultVal string) (v string) {
 		v = defaultVal
 	}
 	return
+}
+
+// envOrInt returns the int representation of the environment variable or the default
+func envOrInt(name string, defaultVal int) int {
+	var v string
+
+	// does an environment variable exist?
+	if v = os.Getenv(name); len(v) == 0 {
+		return defaultVal
+	}
+
+	// convert environment variable
+	val, err := strconv.Atoi(v)
+	if err != nil {
+		log.Printf("[WARN] Invalid int given for PORT environment variable: %s", err)
+		return defaultVal
+	}
+
+	return val
 }
 
 // envOrFunc returns the named environment value or the result of executing the function

@@ -53,7 +53,7 @@ func register(path string, handler Route) (r *mux.Router) {
 // wrapHandler wraps handler functions
 func wrapHandler(handler Route) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		log.Printf("[INFO] %s", req.URL)
+		log.Printf("[INFO] %s %s", req.Method, req.URL)
 
 		defer func() {
 			if r := recover(); r != nil {

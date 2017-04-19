@@ -6,13 +6,12 @@ import (
 	"net/http"
 )
 
-func StartServer(port string) {
-	log.Printf("[INFO] Starting server on port %s", port)
-	// Map routes
-	http.Handle("/", Router())
+// StartServer starts off the HTTP server
+func StartServer(port int) {
+	log.Printf("[INFO] Starting server on port %d", port)
 
 	// Start the HTTP Server
-	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), Router())
 	if err != nil {
 		log.Fatal("[FATAL] ListenAndServe error: ", err)
 	}
