@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import {ProjectResource} from '../resources'
 
 Vue.use(Vuex)
 
@@ -13,8 +14,11 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    fetchProjects (ctx) {
-      ctx.commit('projects', ['x', 'y', 'z'])
+    LOAD_PROJECT_LIST (ctx) {
+      ProjectResource.get()
+        .then(response => {
+          ctx.commit('projects', response.body)
+        })
     }
   }
 })

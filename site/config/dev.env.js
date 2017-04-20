@@ -4,6 +4,9 @@ var prodEnv = require('./prod.env')
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
   proxyTable: {
-    target: 'http://localhost:3000',
+    '/api': {
+      target: 'http://localhost:3000',
+      changeOrigin: true
+    }
   }
 })

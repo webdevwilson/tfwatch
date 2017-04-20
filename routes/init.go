@@ -69,6 +69,8 @@ func wrapHandler(handler Route) http.HandlerFunc {
 		}
 
 		resp.Header().Add("Content-Type", "application/json")
+		resp.Header().Add("Access-Control-Allow-Origin", "http://localhost:8080")
+		resp.Header().Add("Access-Control-Allow-Credentials", "true")
 		err = json.NewEncoder(resp).Encode(data)
 		if err != nil {
 			log.Printf("[ERROR] Error encoding response '%s': %s", req.URL, err)
