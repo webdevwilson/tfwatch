@@ -20,12 +20,10 @@ Continuous integration service for [Terraform](https://terraform.io).
 
 You can download the latest release from the [Releases](https://github.com/webdevwilson/terraform-ci/releases) page.
 
-* Backend written in go
-* Frontend vue.js app
+* Backend written in `go 1.8.1`
+* Frontend vue.js app under NodeJS `v6.10.2`
 
 ### API Endpoints
-
-#### Projects
 
 * **/status** - `GET` Get service status
 * **/api/projects** - `GET`,`PUT` List all projects, create project
@@ -37,4 +35,4 @@ You can download the latest release from the [Releases](https://github.com/webde
 
 ## Running
 * Backend: `go run main.go`
-* Frontend: `cd site; npm run dev`
+* Frontend: `cd site; npm install; npm run dev`
