@@ -10,11 +10,11 @@ Continuous integration service for [Terraform](https://terraform.io).
 * Generates plans when changes committed to source
 * Review and apply plans
 
-## Configuration
-* PORT - (default: 3000) The port the HTTP server will bind to
-* CHECKOUT_DIR - (default: .state/projects) The directory that contains Terraform repositories. These must have a terraform.tfplan in them.
-* STATE_PATH - (default: .state) The location where state is stored on disk
-* LOG_LEVEL
+## Configure with environment variables
+* `PORT` - The port the HTTP server will bind to. Default is `3000`.
+* `CHECKOUT_DIR` - The directory that contains Terraform repositories. These must have a terraform.tfplan in them. Default is `.state/projects`.
+* `STATE_PATH` - The location where state is stored on disk. Default is `.state/projects`.
+* `LOG_LEVEL` - Valid values are: `DEBUG`, `INFO`, `WARN`, `ERROR`. Default is `INFO`.
 
 ## Developing
 
@@ -27,10 +27,10 @@ You can download the latest release from the [Releases](https://github.com/webde
 
 #### Projects
 
-* `/status` - (GET) Get service status
-* `/api/projects` - (GET, PUT) List all projects, create project
-* `/api/projects/{guid}` - (POST, DELETE) Update or delete projects
-* `/api/plan/{guid}` - (GET) Return the current plan associated with the project guid
+* `/status` - `GET` Get service status
+* `/api/projects` - `GET`,`PUT` List all projects, create project
+* `/api/projects/{guid}` - `POST`,`DELETE` Update or delete projects
+* `/api/projects/{guid}/tfplan` - `GET` Return the current plan associated with the project guid
 
 ## Testing
 * `make test`
