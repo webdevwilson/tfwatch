@@ -14,7 +14,7 @@ import (
 
 func init() {
 	r := Router()
-	r.HandleFunc("/api/plan/{guid}", wrapHandler(planGet)).Methods("GET")
+	r.HandleFunc("/api/projects/{guid}/tfplan", wrapHandler(planGet)).Methods("GET")
 }
 
 func planGet(req *http.Request) (data interface{}, err error) {
@@ -32,5 +32,6 @@ func planGet(req *http.Request) (data interface{}, err error) {
 	}
 
 	data, err = terraform.ReadPlan(plan)
+
 	return
 }

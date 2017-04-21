@@ -7,11 +7,12 @@ import (
 
 const projectNS = "projects"
 
+// Project top-level data structure
 type Project struct {
-	GUID     string `json:"GUID,omitempty"`
-	Name     string
-	RepoURL  string
-	RepoPath string
+	GUID     string `json:"guid,omitempty"`
+	Name     string `json:"name,omitempty"`
+	RepoURL  string `json:"repoUrl,omitempty"`
+	RepoPath string `json:"repoPath,omitempty"`
 }
 
 var store persist.Store

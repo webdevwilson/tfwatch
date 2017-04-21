@@ -4,7 +4,7 @@
         <input type="button" v-on:click="fetchProjects" value="Refresh" />
         <ul>
           <li v-for="project in projects">
-            <router-link :to="{ name: 'ProjectDetail', params: { name: project.GUID }}">{{ project.Name }}</router-link>
+            <router-link :to="{ name: 'ProjectDetail', params: { name: project.guid }}">{{ project.name }}</router-link>
           </li>
         </ul>
     </div>
