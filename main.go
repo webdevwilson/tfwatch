@@ -5,8 +5,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"fmt"
-
 	"github.com/webdevwilson/terraform-ci/config"
 	"github.com/webdevwilson/terraform-ci/model"
 	"github.com/webdevwilson/terraform-ci/routes"
@@ -16,7 +14,6 @@ import (
 func main() {
 	settings := config.Get()
 	port := settings.Port
-	log.Print(fmt.Sprintf("[INFO] Listening on port %d ...", port))
 
 	// this should be temporary, until we can get a proper CRUD frontend
 	bootstrapProjects(settings.CheckoutDirectory)

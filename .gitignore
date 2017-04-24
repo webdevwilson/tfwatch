@@ -2,3 +2,4 @@
 main
 terraform-ci
 doc
+routes/site_static.go
