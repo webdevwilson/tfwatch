@@ -1,8 +1,10 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"path"
+	"strings"
 
 	"os"
 
@@ -15,6 +17,15 @@ import (
 func init() {
 	r := Router()
 	r.HandleFunc("/api/projects/{guid}/tfplan", wrapHandler(planGet)).Methods("GET")
+}
+
+type planDescription struct {
+	Resources []resourceChange `json:"resources"`
+}
+
+type resourceChange struct {
+	Name   string `json:"name"`
+	Action string `json:"action"`
 }
 
 func planGet(req *http.Request) (data interface{}, err error) {
@@ -31,7 +42,36 @@ func planGet(req *http.Request) (data interface{}, err error) {
 		return
 	}
 
-	data, err = terraform.ReadPlan(plan)
+	tfPlan, err := terraform.ReadPlan(plan)
+	resources := []resourceChange{}
+	for _, module := range tfPlan.Diff.Modules {
+		for id, res := range module.Resources {
+			if change := res.ChangeType(); change != terraform.DiffNone {
+				var changeStr string
+				switch change {
+				case terraform.DiffCreate:
+					changeStr = "Create"
+				case terraform.DiffDestroyCreate:
+					changeStr = "Recreate"
+				case terraform.DiffDestroy:
+					changeStr = "Destroy"
+				case terraform.DiffUpdate:
+					changeStr = "Update"
+				}
+				name := fmt.Sprintf("%s.%s", strings.Join(module.Path, "."), id)
+				resources = append(resources, resourceChange{
+					name,
+					changeStr,
+				})
+			}
+		}
+	}
+
+	data = planDescription{resources}
 
 	return
+}
+
+func resourceCount(plan *terraform.Plan) int {
+	return 0
 }

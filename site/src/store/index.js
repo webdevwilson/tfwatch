@@ -22,6 +22,8 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    APPLY (ctx, projectId) {
+    },
     LOAD_PROJECT (ctx, projectId) {
       ProjectResource.get({id: projectId})
         .then(response => {
