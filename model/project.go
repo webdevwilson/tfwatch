@@ -9,10 +9,11 @@ const projectNS = "projects"
 
 // Project top-level data structure
 type Project struct {
-	GUID     string `json:"guid,omitempty"`
-	Name     string `json:"name,omitempty"`
-	RepoURL  string `json:"repoUrl,omitempty"`
-	RepoPath string `json:"repoPath,omitempty"`
+	GUID     string            `json:"guid,omitempty"`
+	Name     string            `json:"name,omitempty"`
+	RepoURL  string            `json:"repoUrl,omitempty"`
+	RepoPath string            `json:"repoPath,omitempty"`
+	Settings map[string]string `json:"settings,omitempty"`
 }
 
 var store persist.Store

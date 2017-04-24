@@ -24,12 +24,16 @@ var prjs = []model.Project{
 		"foo",
 		"git@github.com:webdevwilson/terraform-ci",
 		"/foo",
+		map[string]string{
+			"FOO": "BAR",
+		},
 	},
 	model.Project{
 		"",
 		"bar",
 		"git@github.com:webdevwilson/terraform-ci",
 		"/bar",
+		map[string]string{},
 	},
 }
 
@@ -186,6 +190,7 @@ func Test_Project_API(t *testing.T) {
 	assert.Equal(t, prjs[0].Name, prj.Name)
 	assert.Equal(t, prjs[0].RepoURL, prj.RepoURL)
 	assert.Equal(t, prjs[0].RepoPath, prj.RepoPath)
+	assert.Equal(t, prjs[0].Settings["FOO"], prj.Settings["FOO"])
 
 	prjs[1].Name = "abc"
 	guid := prjs[1].GUID
