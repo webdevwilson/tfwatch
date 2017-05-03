@@ -1,7 +1,8 @@
-package task
+package execute
 
 import (
 	"log"
+	"path"
 
 	"os/exec"
 
@@ -9,34 +10,39 @@ import (
 
 	"runtime/debug"
 
+	"os"
+
+	"io/ioutil"
+
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/webdevwilson/terraform-ci/persist"
 )
 
 const persistNamespace = "executions"
 
-// Result contains the results of a task
-type Result struct {
-	ScheduledTask *ScheduledTask
-	ExitCode      int
-	Output        []byte
-}
-
+// Executor is used to schedule tasks to run
 type Executor struct {
 	store    persist.Store
-	taskCh   chan ScheduledTask
+	logDir   string
+	taskCh   chan *ScheduledTask
 	resultCh chan *Result
 }
 
 // NewExecutor creates returns a pointer to
-func NewExecutor(store persist.Store) (exe *Executor) {
-	taskQueue := make(chan ScheduledTask, 50)
-	resultQueue := make(chan *Result, 50)
+func NewExecutor(store persist.Store, logDir string) (exe *Executor) {
+
+	log.Printf("[INFO] Executor log directory: %s", logDir)
+
+	err := os.MkdirAll(logDir, os.ModePerm)
+	if err != nil {
+		log.Printf("[ERROR] Error creating executor log directory %s: %s", logDir, err)
+	}
 
 	exe = &Executor{
 		store:    store,
-		taskCh:   taskQueue,
-		resultCh: resultQueue,
+		logDir:   logDir,
+		taskCh:   make(chan *ScheduledTask, 50),
+		resultCh: make(chan *Result, 50),
 	}
 
 	store.CreateNamespace(persistNamespace)
@@ -51,7 +57,7 @@ func NewExecutor(store persist.Store) (exe *Executor) {
 // runTasks dequeues
 func (exe *Executor) runTasks() {
 
-	// gracefully recover from panics
+	// gracefully recover from panics and continue to run tasks
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("[ERROR] Executor recovered from panic: %s\n%s", r, debug.Stack())
@@ -63,6 +69,10 @@ func (exe *Executor) runTasks() {
 		log.Printf("[INFO] Executing %s", t.String())
 		cmd := exec.Command(t.Command, t.Args...)
 
+		if t.WorkingDirectory != "" {
+			cmd.Dir = t.WorkingDirectory
+		}
+
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -71,51 +81,69 @@ func (exe *Executor) runTasks() {
 			}
 		}
 
-		log.Printf("[INFO] Stdout: %s", output)
-
-		// read the exit code
-		_, ok := cmd.ProcessState.Sys().(*syscall.WaitStatus)
-		if !ok {
-			log.Printf("[ERROR] Error reading process status.")
+		// log output to disk
+		logFile := path.Join(exe.logDir, t.GUID)
+		err = ioutil.WriteFile(logFile, output, os.ModePerm)
+		if err != nil {
+			log.Printf("[WARN] Error logging task output to disk: %s", err)
 		}
 
-		// result := &Result{
-		// 	&t,
-		// 	status.ExitStatus(),
-		// 	output,
-		// }
-		// result.Task.writeChannel <- result
-		// resultQueue <- result
+		// read the exit code
+		var statusCode int
+		status, ok := cmd.ProcessState.Sys().(*syscall.WaitStatus)
+		if !ok {
+			log.Printf("[ERROR] Error reading process status.")
+			statusCode = -99
+		} else {
+			statusCode = status.ExitStatus()
+		}
+
+		result := t.Result(statusCode, output)
+
+		t.writeChannel <- result
+		exe.resultCh <- result
 	}
 }
 
 // persistResults reads from resultChannel
 func (exe *Executor) persistResults() {
 	for r := range exe.resultCh {
+
+		log.Printf("[INFO] Persisting result for task %s", r.GUID)
+
+		// persist result
 		exe.store.Create(persistNamespace, r)
+
+		// output logs
+		logFile := path.Join(exe.logDir, r.GUID)
+		err := ioutil.WriteFile(logFile, r.Output, os.ModePerm)
+		if err != nil {
+			log.Printf("[WARN] Failed to write to log file '%s': %s", logFile, err)
+		}
 	}
 }
 
 // Schedule schedules a job to be run
-func (exe *Executor) Schedule(command string, args ...string) (st *ScheduledTask, err error) {
-	uidPtr, err := uuid.NewV4()
+func (exe *Executor) Schedule(task Task) (st *ScheduledTask, err error) {
 
+	// Create a GUID for the task
+	uidPtr, err := uuid.NewV4()
 	if err != nil {
 		return
 	}
 
+	// Read / Write channel is same
 	ch := make(chan *Result, 1)
 	st = &ScheduledTask{
 		uidPtr.String(),
-		command,
-		args,
+		task,
 		ch,
 		ch,
 	}
 
 	log.Printf("[INFO] Scheduling %s", st.String())
 
-	// exe.taskCh <- st
+	exe.taskCh <- st
 
 	return
 }

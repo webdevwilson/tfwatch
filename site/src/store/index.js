@@ -23,6 +23,11 @@ export default new Vuex.Store({
   },
   actions: {
     APPLY (ctx, projectId) {
+      PlanResource.post({
+        id: projectId
+      }).then(response => {
+        ctx.commit('planResp', response.body)
+      })
     },
     LOAD_PROJECT (ctx, projectId) {
       ProjectResource.get({id: projectId})
@@ -42,6 +47,13 @@ export default new Vuex.Store({
       }).then(response => {
         ctx.commit('plan', response.body)
       })
+    },
+    UPDATE_SETTING (ctx, key, val) {
+      if (!this.project.settings) {
+        this.project.settings = {}
+      }
+      this.project.settings[key] = val
+      ctx.commit('project.settings.' + key, val)
     }
   }
 })

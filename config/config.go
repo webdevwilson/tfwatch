@@ -7,18 +7,20 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/logutils"
+	"github.com/webdevwilson/terraform-ci/execute"
 	"github.com/webdevwilson/terraform-ci/persist"
-	"github.com/webdevwilson/terraform-ci/task"
 )
 
 // Settings contains all the configuration values for the service
 type Settings struct {
-	LogLevel          string
-	SiteRoot          string
-	CheckoutDirectory string
-	Port              int
-	Store             persist.Store
-	Executor          *task.Executor
+	LogLevel            string
+	LogDir              string
+	SiteRoot            string
+	CheckoutDirectory   string
+	Port                int
+	PlanIntervalMinutes int
+	Store               persist.Store
+	Executor            *execute.Executor
 }
 
 var settings *Settings
@@ -26,13 +28,16 @@ var settings *Settings
 func init() {
 
 	// create the persistent store
-	store, err := persist.NewLocalFileStore(envOrFunc("STATE_PATH", defaultStatePath))
+	stateDir := envOrFunc("STATE_DIR", defaultStatePath)
+	store, err := persist.NewLocalFileStore(stateDir)
 
 	if err != nil {
 		log.Fatalf("[FATAL] Error initializing persistence: %s", err)
 	}
 
-	executor := task.NewExecutor(store)
+	// create an executor
+	logDir := envOr("LOG_DIR", path.Join(stateDir, "logs"))
+	executor := execute.NewExecutor(store, path.Join(logDir, "executor"))
 
 	workingDir, err := os.Getwd()
 
@@ -43,9 +48,11 @@ func init() {
 	// initialize settings
 	settings = &Settings{
 		envOr("LOG_LEVEL", "INFO"),
+		logDir,
 		envOr("SITE_ROOT", path.Join(workingDir, "site", "dist")),
-		envOr("CHECKOUT_DIR", path.Join(workingDir, ".state", "projects")),
+		envOr("CHECKOUT_DIR", path.Join(stateDir, "projects")),
 		envOrInt("PORT", 3000),
+		envOrInt("PLAN_INTERVAL", 5),
 		store,
 		executor,
 	}
@@ -70,7 +77,7 @@ func defaultStatePath() (statePath string) {
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to get current working directory: %s", wd)
 	}
-	statePath = path.Join(wd, ".state")
+	statePath = path.Join(wd, ".terraform-ci-data")
 	return
 }
 

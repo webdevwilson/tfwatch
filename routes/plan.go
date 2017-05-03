@@ -17,6 +17,7 @@ import (
 func init() {
 	r := Router()
 	r.HandleFunc("/api/projects/{guid}/tfplan", wrapHandler(planGet)).Methods("GET")
+	r.HandleFunc("/api/projects/{guid}/tfplan", wrapHandler(planApply)).Methods("POST")
 }
 
 type planDescription struct {
@@ -69,6 +70,12 @@ func planGet(req *http.Request) (data interface{}, err error) {
 
 	data = planDescription{resources}
 
+	return
+}
+
+func planApply(req *http.Request) (data interface{}, err error) {
+	guid := mux.Vars(req)["guid"]
+	data, err = model.ExecutePlan(guid)
 	return
 }
 

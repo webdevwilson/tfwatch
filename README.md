@@ -11,10 +11,11 @@ Continuous integration service for [Terraform](https://terraform.io).
 * Review and apply plans
 
 ## Configure with environment variables
-* **PORT** - The port the HTTP server will bind to. Default is `3000`.
 * **CHECKOUT_DIR** - The directory that contains Terraform repositories. These must have a terraform.tfplan in them. Default is `.state/projects`.
-* **STATE_PATH** - The location where state is stored on disk. Default is `.state/projects`.
 * **LOG_LEVEL** - Valid values are: `DEBUG`, `INFO`, `WARN`, `ERROR`. Default is `INFO`.
+* **PLAN_INTERVAL** - The number of minutes between plan refreshes. Default is `5`.
+* **PORT** - The port the HTTP server will bind to. Default is `3000`.
+* **STATE_DIR** - The location where state is stored on disk. Default is `.terraform-ci-data/projects`.
 
 ## Developing
 

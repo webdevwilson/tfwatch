@@ -21,7 +21,7 @@ type localFileStore struct {
 
 // NewLocalFileStore creates a Store object that stores to the local file system using Glob encoding
 func NewLocalFileStore(p string) (store Store, err error) {
-	p = path.Join(p, "data")
+	p = path.Join(p, ".terraform-ci-data")
 
 	err = os.MkdirAll(p, os.ModePerm)
 	if err != nil {

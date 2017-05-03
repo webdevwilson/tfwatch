@@ -5,6 +5,7 @@
         <ul>
           <li v-for="project in projects">
             <router-link :to="{ name: 'ProjectDetail', params: { name: project.guid }}">{{ project.name }}</router-link>
+            <router-link :to="{ name: 'ProjectUpdate', params: { name: project.guid }}">edit</router-link>
           </li>
         </ul>
     </div>
