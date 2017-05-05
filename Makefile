@@ -22,7 +22,9 @@ clean:
 	rm -rf site/dist
 
 site/dist:
-	cd site; npm run build
+	cd site && \
+	npm install && \
+	npm run build
 
 terraform-ci: site/dist
 	go build -o terraform-ci main.go

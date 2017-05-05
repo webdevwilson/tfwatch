@@ -1,7 +1,7 @@
 FROM hashicorp/terraform:full
 MAINTAINER "Kerry Wilson <kwilson@goodercode.com>"
 
-RUN apk add --update make
+RUN apk add --update make npm
 
 ENV APP_PATH=$GOPATH/src/github.com/webdevwilson/terraform-ci
 
