@@ -18,7 +18,6 @@ test:
 		xargs -t -n4 go test $(TESTARGS) -timeout=60s -parallel=4
 
 clean:
-	rm routes/site_static.go
 	rm -rf site/dist
 
 site/dist:

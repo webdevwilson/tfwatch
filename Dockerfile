@@ -10,7 +10,7 @@ WORKDIR $APP_PATH
 # Copy sources
 ADD . $APP_PATH
 
-RUN make clean install
+RUN make build install
 
 VOLUME /var/lib/terraform-ci
 
