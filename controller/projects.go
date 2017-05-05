@@ -2,6 +2,7 @@ package controller
 
 import (
 	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"time"
@@ -13,7 +14,9 @@ import (
 
 const projectNS = "projects"
 
-// Controller hosts the business logic
+var bootstrapIgnores = []string{".git", ".terraform-ci", "node_modules"}
+
+// Projects hosts the business logic for projects
 type Projects interface {
 	List() (projects []model.Project, err error)
 	Get(guid string) (*model.Project, error)
@@ -56,8 +59,8 @@ func NewProjectsController(dir string, store persist.Store, executor execute.Exe
 }
 
 func (p *projects) bootstrap(dir string) {
-	// Scan checkout directory for projects
-	log.Printf("[INFO] Bootstrapping projects in %s", dir)
+	// Naive scan for terraform projects
+	log.Printf("[DEBUG] Bootstrapping projects in %s", dir)
 
 	dirs, err := filepath.Glob(path.Join(dir, "*"))
 	if err != nil {
@@ -67,16 +70,39 @@ func (p *projects) bootstrap(dir string) {
 
 	for _, dir := range dirs {
 
+		// search ignores
+		var ignore bool
+		for i := range bootstrapIgnores {
+			if path.Base(dir) == bootstrapIgnores[i] {
+				ignore = true
+				break
+			}
+		}
+		if ignore {
+			continue
+		}
+
+		// is this even a directory?
+		fi, err := os.Stat(dir)
+		if err != nil {
+			log.Printf("[ERROR] Error determining if '%s' is directory", dir)
+			continue
+		}
+
+		if !fi.IsDir() {
+			continue
+		}
+
 		// does this path have .tf files?
 		tf, err := filepath.Glob(path.Join(dir, "*.tf"))
 		if err != nil {
-			log.Fatalf("[FATAL] Error encountered searching for .tf files: %s", err)
-			return
+			log.Printf("[ERROR] Error encountered searching for .tf files: %s", err)
+			continue
 		}
 
 		// none found? continue to next
 		if len(tf) == 0 {
-			log.Printf("[INFO] No .tf files found in %s, skipping", dir)
+			log.Printf("[DEBUG] No .tf files found in %s, skipping", dir)
 			continue
 		}
 
@@ -84,7 +110,8 @@ func (p *projects) bootstrap(dir string) {
 		prj, err := p.GetByName(name)
 
 		if err != nil {
-			log.Fatalf("[FATAL] Error bootstrapping projects: %s", err)
+			log.Printf("[ERROR] Error bootstrapping projects: %s", err)
+			continue
 		}
 
 		if prj == nil {
