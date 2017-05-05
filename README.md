@@ -10,7 +10,7 @@ Continuous integration service for [Terraform](https://terraform.io).
 
 Get it up and running quickly in docker:
 
-`docker run -e -v PATH:/var/lib/terraform-ci --expose 3000 webdevwilson/terraform-ci`
+`docker run -v $CHECKOUT_DIR:/var/lib/terraform-ci --expose 3000 webdevwilson/terraform-ci`
 
 ## Planned Features
 
