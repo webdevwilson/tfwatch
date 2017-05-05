@@ -3,26 +3,49 @@
 Continuous integration service for [Terraform](https://terraform.io). 
 
 ## Current State
+
 * Requires terraform repositories to be checked out to a directory (CHECKOUT_DIR) and to have a terraform.tfplan
 
+### Quickstart
+
+Get it up and running quickly in docker:
+
+`docker run -e -v PATH:/var/lib/terraform-ci --expose 3000 webdevwilson/terraform-ci`
+
 ## Planned Features
+
 * Securely stores template variables
 * Generates plans when changes committed to source
 * Review and apply plans
 
 ## Configure with environment variables
-* **CHECKOUT_DIR** - The directory that contains Terraform repositories. These must have a terraform.tfplan in them. Default is `.state/projects`.
+
+* **CHECKOUT_DIR** - The directory that contains Terraform repositories. These must have a terraform.tfplan in them. Default is `/var/lib/terraform-ci`.
+* **CLEAR_STATE** - Clear the state when this variable is set. Default is `false`.
 * **LOG_LEVEL** - Valid values are: `DEBUG`, `INFO`, `WARN`, `ERROR`. Default is `INFO`.
 * **PLAN_INTERVAL** - The number of minutes between plan refreshes. Default is `5`.
 * **PORT** - The port the HTTP server will bind to. Default is `3000`.
 * **STATE_DIR** - The location where state is stored on disk. Default is `.terraform-ci-data/projects`.
+* **SITE_DIR** - Directory containing static site resources. Default is `site/dist`.
 
 ## Developing
 
 You can download the latest release from the [Releases](https://github.com/webdevwilson/terraform-ci/releases) page.
 
-* Backend written in `go 1.8.1`
-* Frontend vue.js app under NodeJS `v6.10.2`
+### Backend
+
+The backend is written using `go 1.8.1`. [govendor](https://github.com/kardianos/govendor) is used for vendoring. To install the tools
+you will need to develop on the backend, run `make tools`.
+
+To run the backend with live reload run `fresh`. 
+
+**You must have `$GOPATH/bin` on your `$PATH` for fresh to work**
+
+### Frontend
+
+Frontend vue.js app under NodeJS `v6.10.2`
+
+To run the front end, run `npm run dev` from the `/site` directory. You will also need the backend running `go run main.go` to respond to API requests.
 
 ### API Endpoints
 
@@ -30,6 +53,8 @@ You can download the latest release from the [Releases](https://github.com/webde
 * **/api/projects** - `GET`,`PUT` List all projects, create project
 * **/api/projects/{guid}** - `POST`,`DELETE` Update or delete projects
 * **/api/projects/{guid}/tfplan** - `GET` Return the current plan associated with the project guid
+
+### 
 
 ## Testing
 * `make test`

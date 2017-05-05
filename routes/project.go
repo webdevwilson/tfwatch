@@ -10,27 +10,30 @@ import (
 )
 
 func init() {
-	r := Router()
-	r.HandleFunc("/api/projects", wrapHandler(projectList)).Methods("GET")
-	r.HandleFunc("/api/projects/{guid}", wrapHandler(projectGet)).Methods("GET")
-	r.HandleFunc("/api/projects", wrapHandler(projectCreate)).Methods("PUT")
-	r.HandleFunc("/api/projects/{guid}", wrapHandler(projectUpdate)).Methods("POST")
-	r.HandleFunc("/api/projects/{guid}", wrapHandler(projectDelete)).Methods("DELETE")
+	registrationCh <- func(s *server) {
+		s.registerAPIEndpoints([]api{
+			api{"GET", "/api/projects", projectList},
+			api{"GET", "/api/projects/{guid}", projectGet},
+			api{"PUT", "/api/projects", projectCreate},
+			api{"POST", "/api/projects/{guid}", projectUpdate},
+			api{"DELETE", "/api/projects/{guid}", projectDelete},
+		}...)
+	}
 }
 
 func projectList(req *http.Request) (data interface{}, err error) {
-	return model.ListProjects()
+	return projectsController().List()
 }
 
 func projectGet(req *http.Request) (interface{}, error) {
 	guid := mux.Vars(req)["guid"]
-	return model.GetProject(guid)
+	return projectsController().Get(guid)
 }
 
 func projectCreate(req *http.Request) (data interface{}, err error) {
 	var prj model.Project
 	json.NewDecoder(req.Body).Decode(&prj)
-	err = model.CreateProject(&prj)
+	err = projectsController().Create(&prj)
 
 	if err != nil {
 		return
@@ -49,7 +52,7 @@ func projectUpdate(req *http.Request) (data interface{}, err error) {
 	guid := mux.Vars(req)["guid"]
 	prj.GUID = guid
 
-	err = model.UpdateProject(&prj)
+	err = projectsController().Update(&prj)
 
 	if err != nil {
 		return
@@ -62,6 +65,6 @@ func projectUpdate(req *http.Request) (data interface{}, err error) {
 
 func projectDelete(req *http.Request) (data interface{}, err error) {
 	guid := mux.Vars(req)["guid"]
-	err = model.DeleteProject(guid)
+	err = projectsController().Delete(guid)
 	return
 }

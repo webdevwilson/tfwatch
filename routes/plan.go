@@ -2,22 +2,21 @@ package routes
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"path"
 	"strings"
-
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/webdevwilson/terraform-ci/config"
-	"github.com/webdevwilson/terraform-ci/model"
 )
 
 func init() {
-	r := Router()
-	r.HandleFunc("/api/projects/{guid}/tfplan", wrapHandler(planGet)).Methods("GET")
-	r.HandleFunc("/api/projects/{guid}/tfplan", wrapHandler(planApply)).Methods("POST")
+	registrationCh <- func(s *server) {
+		s.registerAPIEndpoints([]api{
+			api{"GET", "/api/projects/{guid}/tfplan", planGet},
+			api{"POST", "/api/projects/{guid}/tfplan", planApply},
+		}...)
+	}
 }
 
 type planDescription struct {
@@ -31,19 +30,22 @@ type resourceChange struct {
 
 func planGet(req *http.Request) (data interface{}, err error) {
 	guid := mux.Vars(req)["guid"]
-	dir := config.Get().CheckoutDirectory
 
-	project, err := model.GetProject(guid)
+	project, err := projectsController().Get(guid)
 	if err != nil {
 		return
 	}
 
-	plan, err := os.Open(path.Join(dir, project.Name, "terraform.tfplan"))
+	log.Printf("[DEBUG] Retrieving plan for project '%s'", project.GUID)
+
+	tfPlan, err := project.Plan()
+
 	if err != nil {
+		log.Printf("[ERROR] Error retrieving plan for project '%s'", project.GUID)
 		return
 	}
 
-	tfPlan, err := terraform.ReadPlan(plan)
+	log.Printf("[DEBUG] Retrieved plan for project '%s'", project.GUID)
 	resources := []resourceChange{}
 	for _, module := range tfPlan.Diff.Modules {
 		for id, res := range module.Resources {
@@ -70,12 +72,14 @@ func planGet(req *http.Request) (data interface{}, err error) {
 
 	data = planDescription{resources}
 
+	log.Printf("[DEBUG] Found %d resource modifications", len(resources))
+
 	return
 }
 
 func planApply(req *http.Request) (data interface{}, err error) {
 	guid := mux.Vars(req)["guid"]
-	data, err = model.ExecutePlan(guid)
+	data, err = projectsController().ExecutePlan(guid)
 	return
 }
 

@@ -20,8 +20,13 @@ import (
 
 const persistNamespace = "executions"
 
+// Executor runs processes on the machine and persists results
+type Executor interface {
+	Schedule(Task) (*ScheduledTask, error)
+}
+
 // Executor is used to schedule tasks to run
-type Executor struct {
+type executor struct {
 	store    persist.Store
 	logDir   string
 	taskCh   chan *ScheduledTask
@@ -29,7 +34,7 @@ type Executor struct {
 }
 
 // NewExecutor creates returns a pointer to
-func NewExecutor(store persist.Store, logDir string) (exe *Executor) {
+func NewExecutor(store persist.Store, logDir string) Executor {
 
 	log.Printf("[INFO] Executor log directory: %s", logDir)
 
@@ -38,7 +43,7 @@ func NewExecutor(store persist.Store, logDir string) (exe *Executor) {
 		log.Printf("[ERROR] Error creating executor log directory %s: %s", logDir, err)
 	}
 
-	exe = &Executor{
+	exe := &executor{
 		store:    store,
 		logDir:   logDir,
 		taskCh:   make(chan *ScheduledTask, 50),
@@ -51,11 +56,11 @@ func NewExecutor(store persist.Store, logDir string) (exe *Executor) {
 
 	go exe.persistResults()
 
-	return
+	return exe
 }
 
 // runTasks dequeues
-func (exe *Executor) runTasks() {
+func (exe *executor) runTasks() {
 
 	// gracefully recover from panics and continue to run tasks
 	defer func() {
@@ -75,9 +80,15 @@ func (exe *Executor) runTasks() {
 
 		output, err := cmd.CombinedOutput()
 
+		// in cases where the command was not executed (not found on path)
+		// exit code is -1 and output is the error message
+		var statusCode int
 		if err != nil {
 			if _, ok := err.(*exec.ExitError); !ok {
 				log.Printf("[ERROR] Error executing %s: %s", t.String(), err)
+				statusCode = -1
+				output = []byte(err.Error())
+				return
 			}
 		}
 
@@ -89,27 +100,28 @@ func (exe *Executor) runTasks() {
 		}
 
 		// read the exit code
-		var statusCode int
-		status, ok := cmd.ProcessState.Sys().(*syscall.WaitStatus)
-		if !ok {
-			log.Printf("[ERROR] Error reading process status.")
-			statusCode = -99
-		} else {
-			statusCode = status.ExitStatus()
+		if statusCode == 0 {
+			status, ok := cmd.ProcessState.Sys().(*syscall.WaitStatus)
+			if !ok {
+				log.Printf("[ERROR] Error reading process status for task '%s'", t.GUID)
+				statusCode = -2
+			} else {
+				statusCode = status.ExitStatus()
+			}
 		}
 
+		// create result, and send across channel
 		result := t.Result(statusCode, output)
-
 		t.writeChannel <- result
 		exe.resultCh <- result
 	}
 }
 
 // persistResults reads from resultChannel
-func (exe *Executor) persistResults() {
+func (exe *executor) persistResults() {
 	for r := range exe.resultCh {
 
-		log.Printf("[INFO] Persisting result for task %s", r.GUID)
+		log.Printf("[INFO] Persisting result for task '%s'", r.GUID)
 
 		// persist result
 		exe.store.Create(persistNamespace, r)
@@ -124,7 +136,7 @@ func (exe *Executor) persistResults() {
 }
 
 // Schedule schedules a job to be run
-func (exe *Executor) Schedule(task Task) (st *ScheduledTask, err error) {
+func (exe *executor) Schedule(task Task) (st *ScheduledTask, err error) {
 
 	// Create a GUID for the task
 	uidPtr, err := uuid.NewV4()
@@ -149,7 +161,7 @@ func (exe *Executor) Schedule(task Task) (st *ScheduledTask, err error) {
 }
 
 // GetResult returns a result from disk
-func (exe *Executor) GetResult(guid string) (r Result, err error) {
+func (exe *executor) GetResult(guid string) (r Result, err error) {
 	// f, err := os.Open(path.Join(resultPath, guid))
 
 	if err != nil {

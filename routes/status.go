@@ -3,7 +3,9 @@ package routes
 import "net/http"
 
 func init() {
-	register("/status", status)
+	registrationCh <- func(s *server) {
+		s.registerAPIEndpoints(api{"GET", "/status", status})
+	}
 }
 
 // Status returns error

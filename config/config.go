@@ -7,78 +7,89 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/logutils"
+	"github.com/webdevwilson/terraform-ci/controller"
 	"github.com/webdevwilson/terraform-ci/execute"
 	"github.com/webdevwilson/terraform-ci/persist"
+	"github.com/webdevwilson/terraform-ci/routes"
 )
 
-// Settings contains all the configuration values for the service
+// Settings contains all the configuration values for the service. Do not put public stuff
+// in this data structure. Should configure application here and expose interfaces, not config values (IOC).
+// This will likely be discarded in favor of a 'Context' data structure that contains references to the disparate
+// systems. Even further, these systems should be communicating across a messaging channel as opposed to being
+// tightly coupled.
 type Settings struct {
-	LogLevel            string
-	LogDir              string
-	SiteRoot            string
-	CheckoutDirectory   string
-	Port                int
-	PlanIntervalMinutes int
-	Store               persist.Store
-	Executor            *execute.Executor
+	Server   routes.HTTPServer
+	Projects controller.Projects
 }
 
 var settings *Settings
 
+const defaultCheckoutDir = "/var/lib/terraform-ci"
+
 func init() {
 
-	// create the persistent store
-	stateDir := envOrFunc("STATE_DIR", defaultStatePath)
-	store, err := persist.NewLocalFileStore(stateDir)
+	checkoutDir := envOr("CHECKOUT_DIR", defaultCheckoutDir)
+	stateDir := envOr("STATE_DIR", path.Join(checkoutDir, ".terraform-ci"))
 
+	// clear state directory
+	if clearState := os.Getenv("CLEAR_STATE"); len(clearState) > 0 {
+		log.Printf("[WARN] Clearing state directory '%s'", stateDir)
+		err := os.RemoveAll(stateDir)
+		if err != nil {
+			log.Printf("[WARN] Error clearing state directory '%s': %s", stateDir, err)
+		}
+	}
+
+	// initialize the data store
+	store, err := persist.NewLocalFileStore(path.Join(stateDir, "data"))
 	if err != nil {
 		log.Fatalf("[FATAL] Error initializing persistence: %s", err)
 	}
 
-	// create an executor
+	// logging configuration
 	logDir := envOr("LOG_DIR", path.Join(stateDir, "logs"))
-	executor := execute.NewExecutor(store, path.Join(logDir, "executor"))
-
-	workingDir, err := os.Getwd()
-
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to get current working directory: %s", workingDir)
-	}
-
-	// initialize settings
-	settings = &Settings{
-		envOr("LOG_LEVEL", "INFO"),
-		logDir,
-		envOr("SITE_ROOT", path.Join(workingDir, "site", "dist")),
-		envOr("CHECKOUT_DIR", path.Join(stateDir, "projects")),
-		envOrInt("PORT", 3000),
-		envOrInt("PLAN_INTERVAL", 5),
-		store,
-		executor,
-	}
-
+	logLevel := envOr("LOG_LEVEL", "INFO")
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-		MinLevel: logutils.LogLevel(settings.LogLevel),
+		MinLevel: logutils.LogLevel(logLevel),
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(filter)
-	log.Printf("[INFO] Log level set to %s", settings.LogLevel)
+	log.Printf("[INFO] Log level set to %s", logLevel)
+
+	// create an executor
+	executor := execute.NewExecutor(store, path.Join(logDir, "executor"))
+
+	projects := controller.NewProjectsController(checkoutDir, store, executor)
+
+	// create the HTTP server
+	accessLogDir := path.Join(logDir, "http")
+	err = os.MkdirAll(accessLogDir, os.ModePerm)
+	if err != nil {
+		log.Printf("[WARN] Error creating access log directory '%s': %s", accessLogDir, err)
+	}
+
+	// open access log
+	accessLog, err := os.OpenFile(path.Join(accessLogDir, "access.log"), os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Printf("[WARN] Error opening access log: %s", err)
+	}
+
+	siteDir := os.Getenv("SITE_DIR")
+	port := envOrUint("PORT", 3000)
+	server := routes.InitializeServer(port, accessLog, projects, siteDir)
+
+	// initialize settings
+	settings = &Settings{
+		Projects: projects,
+		Server:   server,
+	}
 }
 
 // Get returns configuration data
 func Get() *Settings {
 	return settings
-}
-
-// defaultStatePath returns the current working directory / .state
-func defaultStatePath() (statePath string) {
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to get current working directory: %s", wd)
-	}
-	statePath = path.Join(wd, ".terraform-ci-data")
-	return
 }
 
 // env returns environment variables. fatal error if it does not exist
@@ -98,7 +109,7 @@ func envOr(name string, defaultVal string) (v string) {
 }
 
 // envOrInt returns the int representation of the environment variable or the default
-func envOrInt(name string, defaultVal int) int {
+func envOrUint(name string, defaultVal uint) uint {
 	var v string
 
 	// does an environment variable exist?
@@ -113,7 +124,7 @@ func envOrInt(name string, defaultVal int) int {
 		return defaultVal
 	}
 
-	return val
+	return uint(val)
 }
 
 // envOrFunc returns the named environment value or the result of executing the function
