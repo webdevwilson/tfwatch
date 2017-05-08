@@ -1,0 +1,8 @@
+dependencies:
+  - make tools
+
+test:
+  - make test
+
+build:
+  - make build

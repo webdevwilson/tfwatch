@@ -1,6 +1,8 @@
-# terraform-ci
+# terraform-ci 
 
 Continuous integration service for [Terraform](https://terraform.io). 
+
+* Build Status - [![CircleCI](https://circleci.com/gh/webdevwilson/terraform-ci.svg?style=svg)](https://circleci.com/gh/webdevwilson/terraform-ci)
 
 ## Current State
 
