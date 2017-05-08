@@ -1,8 +1,7 @@
 dependencies:
-  - make tools
+  override:
+    - make tools
 
-test:
-  - make test
-
-build:
-  - make build
+compile:
+  override:
+    - make build
