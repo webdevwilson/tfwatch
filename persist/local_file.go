@@ -21,15 +21,28 @@ type localFileStore struct {
 }
 
 // NewLocalFileStore creates a Store object that stores to the local file system using Glob encoding
-func NewLocalFileStore(dir string) (store Store, err error) {
-	err = os.MkdirAll(dir, os.ModePerm)
+func NewLocalFileStore(dir string) (Store, error) {
+	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	l := make(map[string]*sync.Mutex)
-	store = &localFileStore{dir, &sync.Mutex{}, l}
-	return
+	lfs := &localFileStore{dir, &sync.Mutex{}, l}
+
+	// scan for namespaces
+	dirs, err := filepath.Glob(path.Join(dir, "*"))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dir := range dirs {
+		ns := path.Base(dir)
+		log.Printf("[DEBUG] Found namespace '%s'", ns)
+		lfs.CreateNamespace(ns)
+	}
+
+	return lfs, err
 }
 
 // Destroy
@@ -47,7 +60,10 @@ func (lfs *localFileStore) Destroy() (err error) {
 // List returns the keys stored in a namespace
 func (lfs *localFileStore) List(ns string) (guids []string, err error) {
 
-	lfs.Lock(ns)
+	err = lfs.Lock(ns)
+	if err != nil {
+		return
+	}
 	defer lfs.Unlock(ns)
 
 	guids, err = filepath.Glob(path.Join(lfs.path, ns, "*"))
@@ -65,12 +81,15 @@ func (lfs *localFileStore) List(ns string) (guids []string, err error) {
 // Get returns
 func (lfs *localFileStore) Get(ns, guid string, value interface{}) error {
 
-	lfs.Lock(ns)
+	err := lfs.Lock(ns)
+	if err != nil {
+		return err
+	}
 	defer lfs.Unlock(ns)
 
 	// ensure the directory exists
 	nsPath := path.Join(lfs.path, ns)
-	err := os.MkdirAll(nsPath, os.ModePerm)
+	err = os.MkdirAll(nsPath, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -91,7 +110,10 @@ func (lfs *localFileStore) Get(ns, guid string, value interface{}) error {
 
 func (lfs *localFileStore) Create(ns string, value interface{}) (string, error) {
 
-	lfs.Lock(ns)
+	err := lfs.Lock(ns)
+	if err != nil {
+		return "", err
+	}
 	defer lfs.Unlock(ns)
 
 	// create a guid
@@ -127,7 +149,10 @@ func (lfs *localFileStore) Update(ns, guid string, value interface{}) error {
 		return fmt.Errorf("Namespace %s does not exist", ns)
 	}
 
-	lfs.Lock(ns)
+	err := lfs.Lock(ns)
+	if err != nil {
+		return err
+	}
 	defer lfs.Unlock(ns)
 
 	p := path.Join(lfs.path, ns, guid)
@@ -144,11 +169,10 @@ func (lfs *localFileStore) Update(ns, guid string, value interface{}) error {
 
 func (lfs *localFileStore) Delete(ns, guid string) error {
 
-	if !lfs.HasNamespace(ns) {
-		return fmt.Errorf("Namespace %s does not exist", ns)
+	err := lfs.Lock(ns)
+	if err != nil {
+		return err
 	}
-
-	lfs.Lock(ns)
 	defer lfs.Unlock(ns)
 
 	p := path.Join(lfs.path, ns, guid)
@@ -198,9 +222,17 @@ func (lfs *localFileStore) RemoveNamespace(ns string) error {
 	return nil
 }
 
-func (lfs *localFileStore) Lock(ns string) {
+func (lfs *localFileStore) Lock(ns string) error {
 	log.Printf("[DEBUG] Locking persist namespace '%s'", ns)
-	lfs.nsLocks[ns].Lock()
+
+	var v *sync.Mutex
+	var ok bool
+	if v, ok = lfs.nsLocks[ns]; !ok {
+		return fmt.Errorf("Namespace '%s' does not exist!", ns)
+	}
+
+	v.Lock()
+	return nil
 }
 
 func (lfs *localFileStore) Unlock(ns string) {

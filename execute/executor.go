@@ -22,7 +22,7 @@ const persistNamespace = "executions"
 
 // Executor runs processes on the machine and persists results
 type Executor interface {
-	Schedule(Task) (*ScheduledTask, error)
+	Schedule(*Task) (*ScheduledTask, error)
 }
 
 // Executor is used to schedule tasks to run
@@ -136,7 +136,7 @@ func (exe *executor) persistResults() {
 }
 
 // Schedule schedules a job to be run
-func (exe *executor) Schedule(task Task) (st *ScheduledTask, err error) {
+func (exe *executor) Schedule(task *Task) (st *ScheduledTask, err error) {
 
 	// Create a GUID for the task
 	uidPtr, err := uuid.NewV4()
@@ -148,7 +148,7 @@ func (exe *executor) Schedule(task Task) (st *ScheduledTask, err error) {
 	ch := make(chan *Result, 1)
 	st = &ScheduledTask{
 		uidPtr.String(),
-		task,
+		*task,
 		ch,
 		ch,
 	}

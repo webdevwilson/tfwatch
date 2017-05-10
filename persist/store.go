@@ -32,7 +32,7 @@ type Store interface {
 	RemoveNamespace(ns string) error
 
 	// Lock sets a lock on the namespace, when error is returned no lock was acquired
-	Lock(ns string)
+	Lock(ns string) error
 
 	// Unlock unlocks a namespace
 	Unlock(ns string)

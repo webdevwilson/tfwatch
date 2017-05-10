@@ -13,8 +13,8 @@ import (
 func init() {
 	registrationCh <- func(s *server) {
 		s.registerAPIEndpoints([]api{
-			api{"GET", "/api/projects/{guid}/tfplan", planGet},
-			api{"POST", "/api/projects/{guid}/tfplan", planApply},
+			api{"GET", "/api/projects/{guid}/tfplan", projectPlanGet},
+			api{"POST", "/api/projects/{guid}/tfplan", projectPlanApply},
 		}...)
 	}
 }
@@ -28,7 +28,7 @@ type resourceChange struct {
 	Action string `json:"action"`
 }
 
-func planGet(req *http.Request) (data interface{}, err error) {
+func projectPlanGet(req *http.Request) (data interface{}, err error) {
 	guid := mux.Vars(req)["guid"]
 
 	project, err := projectsController().Get(guid)
@@ -77,9 +77,15 @@ func planGet(req *http.Request) (data interface{}, err error) {
 	return
 }
 
-func planApply(req *http.Request) (data interface{}, err error) {
+func projectPlanApply(req *http.Request) (data interface{}, err error) {
 	guid := mux.Vars(req)["guid"]
-	data, err = projectsController().ExecutePlan(guid)
+
+	project, err := projectsController().Get(guid)
+	if err != nil {
+		return
+	}
+
+	data, err = projectsController().ExecutePlan(project)
 	return
 }
 

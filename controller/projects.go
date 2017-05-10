@@ -24,7 +24,8 @@ type Projects interface {
 	Create(prj *model.Project) (err error)
 	Update(prj *model.Project) error
 	Delete(guid string) error
-	ExecutePlan(guid string) (taskID string, err error)
+	ExecutePlan(prj *model.Project) (taskID string, err error)
+	GetExecutions(prj *model.Project) (results []*execute.Result, err error)
 }
 
 type projects struct {
@@ -190,6 +191,12 @@ func (p *projects) Create(prj *model.Project) (err error) {
 
 	prj.GUID = guid
 
+	// create namespace to store executions
+	err = p.store.CreateNamespace(prj.ExecutionNS())
+	if err != nil {
+		return
+	}
+
 	return
 }
 
@@ -204,23 +211,52 @@ func (p *projects) Delete(guid string) error {
 }
 
 // ExecutePlan
-func (p *projects) ExecutePlan(guid string) (taskID string, err error) {
-	task := execute.Task{
+func (p *projects) ExecutePlan(prj *model.Project) (string, error) {
+	return p.executeInProject(prj, &execute.Task{
 		Command: "terraform",
 		Args: []string{
 			"apply",
 			"-outfile",
 			"terraform.tfplan",
 		},
+	})
+}
+
+// GetExecutions returns the executions that have occurred in a project
+func (p *projects) GetExecutions(prj *model.Project) (r []*execute.Result, err error) {
+	guids, err := p.store.List(prj.ExecutionNS())
+	if err != nil {
+		return
 	}
-	st, err := p.executor.Schedule(task)
+	r = make([]*execute.Result, len(guids))
+
+	for i, guid := range guids {
+		p.store.Get(prj.ExecutionNS(), guid, &r[i])
+	}
+
+	return
+}
+
+// executeInProject
+func (p *projects) executeInProject(prj *model.Project, t *execute.Task) (taskID string, err error) {
+	t.WorkingDirectory = prj.LocalPath
+	st, err := p.executor.Schedule(t)
 	taskID = st.GUID
+
+	// persist execution
+	go func() {
+		r := <-st.Channel
+		_, err := p.store.Create(prj.ExecutionNS(), r)
+		if err != nil {
+			log.Printf("[ERROR] Error persisting execution in project '%s': %s", prj.GUID, err)
+		}
+	}()
+
 	return
 }
 
 // planRunner is responsible for starting up the goroutine that runs plans
 func (p *projects) planRunner() {
-	// Start ticker that runs plans
 	prjs, err := p.List()
 	if err != nil {
 		log.Printf("[ERROR] Error retrieving projects: %s", err)
@@ -235,18 +271,13 @@ func (p *projects) planRunner() {
 
 func (p *projects) plan(prj *model.Project) {
 	log.Printf("[INFO] Running plan for project '%s'", prj.GUID)
-	task := execute.Task{
-		Command:          "terraform",
-		WorkingDirectory: prj.LocalPath,
-		Args:             []string{"plan", "-out", "terraform.tfplan"},
+	task := &execute.Task{
+		Command: "terraform",
+		Args:    []string{"plan", "-out", "terraform.tfplan"},
 	}
-	st, err := p.executor.Schedule(task)
+	_, err := p.executeInProject(prj, task)
 	if err != nil {
 		log.Printf("[ERROR] Error scheduling plan run: %s", err)
 		return
-	}
-
-	for result := range st.Channel {
-		log.Printf("[INFO] Plan exited with code %d", result.ExitCode)
 	}
 }
