@@ -49,6 +49,8 @@ Frontend vue.js app under NodeJS `v6.10.2`
 
 To run the front end, run `npm run dev` from the `/site` directory. You will also need the backend running `go run main.go` to respond to API requests.
 
+**NOTE: To run V2 of the site, run `npm run dev` from the `siteV2` directory**
+
 ### API Endpoints
 
 * **/status** - `GET` Get service status
