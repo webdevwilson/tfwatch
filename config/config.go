@@ -6,6 +6,8 @@ import (
 	"path"
 	"strconv"
 
+	"time"
+
 	"github.com/hashicorp/logutils"
 	"github.com/webdevwilson/terraform-ci/controller"
 	"github.com/webdevwilson/terraform-ci/execute"
@@ -61,7 +63,8 @@ func init() {
 	// create an executor
 	executor := execute.NewExecutor(store, path.Join(logDir, "executor"))
 
-	projects := controller.NewProjectsController(checkoutDir, store, executor)
+	// create the controller
+	projects := controller.NewProjectsController(checkoutDir, store, executor, 5*time.Minute)
 
 	// create the HTTP server
 	accessLogDir := path.Join(logDir, "http")

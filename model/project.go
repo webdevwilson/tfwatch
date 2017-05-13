@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"path"
 
@@ -12,12 +13,23 @@ import (
 
 // Project top-level data structure
 type Project struct {
-	GUID      string            `json:"guid,omitempty"`
-	Name      string            `json:"name,omitempty"`
-	RepoURL   string            `json:"repoUrl,omitempty"`
-	RepoPath  string            `json:"repoPath,omitempty"`
-	Settings  map[string]string `json:"settings,omitempty"`
-	LocalPath string            `json:"-"`
+	GUID        string            `json:"guid,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	RepoURL     string            `json:"repo_url,omitempty"`
+	RepoPath    string            `json:"repo_path,omitempty"`
+	Settings    map[string]string `json:"settings,omitempty"`
+	PlanUpdated time.Time         `json:"plan_updated,omitempty"`
+	Status      string            `json:"status,omitempty"`
+	LocalPath   string            `json:"-"`
+}
+
+// NewProject creates a new project
+func NewProject(name string, dir string) *Project {
+	return &Project{
+		Name:      name,
+		LocalPath: dir,
+		Status:    "new",
+	}
 }
 
 // Plan returns the Terraform plan for a project

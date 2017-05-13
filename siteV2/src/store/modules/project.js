@@ -1,5 +1,6 @@
-const state = {
-    projects: [
+import api from '../../api'
+
+const testData = [
           {
             "guid":"17aadb28-1a90-428c-553a-60604297421d",
             "name":"lambda_monitor_queues",
@@ -36,7 +37,10 @@ const state = {
             "status": "ok",
             "planupdated": "2 days ago"
          }
-      ]
+      ] 
+
+const state = {
+    projects: []
 }
 
 const getters = {
@@ -48,9 +52,20 @@ const getters = {
   }
 }
 
-const actions = {}
+const actions = {
+  LOAD_PROJECT_LIST (ctx) {
+    api.ProjectResource.default.get()
+      .then(response => {
+        ctx.commit('projects', response.body)
+      })
+  }
+}
 
-const mutations = {}
+const mutations = {
+  projects (state, data) {
+    state.projects = data
+  }
+}
 
 export default {
   state,

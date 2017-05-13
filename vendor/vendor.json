@@ -159,6 +159,30 @@
 			"revisionTime": "2014-04-22T17:41:19Z"
 		},
 		{
+			"checksumSHA1": "b1fVNJOgzBwZul0348OCmIrMAYI=",
+			"path": "github.com/bradrydzewski/go.auth",
+			"revision": "d0051b5cc53874ee5e0b2223e57c0e35d18029a8",
+			"revisionTime": "2013-08-28T17:13:25Z"
+		},
+		{
+			"checksumSHA1": "1RSogDG2aoft6qMrfD4jv8kfzrw=",
+			"path": "github.com/bradrydzewski/go.auth/oauth1",
+			"revision": "d0051b5cc53874ee5e0b2223e57c0e35d18029a8",
+			"revisionTime": "2013-08-28T17:13:25Z"
+		},
+		{
+			"checksumSHA1": "q5iyNylDP3igPS7YASUOZgJfYhc=",
+			"path": "github.com/bradrydzewski/go.auth/oauth2",
+			"revision": "d0051b5cc53874ee5e0b2223e57c0e35d18029a8",
+			"revisionTime": "2013-08-28T17:13:25Z"
+		},
+		{
+			"checksumSHA1": "GFCSxp+N669T31OCBXuBRcX82MA=",
+			"path": "github.com/dchest/authcookie",
+			"revision": "fbdef6e998665bcb27a2227f39d840dbfc62a918",
+			"revisionTime": "2012-09-17T13:53:55Z"
+		},
+		{
 			"checksumSHA1": "+IH9gXMht4fL/fxKRZ4sqGBps1g=",
 			"path": "github.com/go-ini/ini",
 			"revision": "e7fea39b01aea8d5671f6858f0532f56e8bff3a5",

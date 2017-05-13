@@ -101,7 +101,7 @@ func (exe *executor) runTasks() {
 
 		// read the exit code
 		if statusCode == 0 {
-			status, ok := cmd.ProcessState.Sys().(*syscall.WaitStatus)
+			status, ok := cmd.ProcessState.Sys().(syscall.WaitStatus)
 			if !ok {
 				log.Printf("[ERROR] Error reading process status for task '%s'", t.GUID)
 				statusCode = -2
