@@ -1,8 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import ProjectDetail from '@/components/ProjectDetail'
-import ProjectList from '@/components/ProjectList'
-import ProjectUpdate from '@/components/ProjectUpdate'
+import Dashboard from '../components/Dashboard.vue'
+import Project from '../components/Project.vue'
 
 Vue.use(Router)
 
@@ -10,18 +9,14 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'ProjectList',
-      component: ProjectList
+      name: 'Dashboard',
+      component: Dashboard
     },
     {
-      path: '/project/:name',
-      name: 'ProjectDetail',
-      component: ProjectDetail
-    },
-    {
-      path: '/project/:name/update',
-      name: 'ProjectUpdate',
-      component: ProjectUpdate
+      path: '/project/:guid',
+      name: 'Project',
+      component: Project,
+      props: true
     }
   ]
 })

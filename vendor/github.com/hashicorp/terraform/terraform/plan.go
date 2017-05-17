@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"sync"
 
 	"github.com/hashicorp/terraform/config/module"
@@ -106,6 +107,7 @@ func ReadPlan(src io.Reader) (*Plan, error) {
 	if string(magic) != planFormatMagic {
 		return nil, fmt.Errorf("not a valid plan file")
 	}
+	log.Printf("[DEBUG] terraform.ReadPlan A")
 
 	// Verify the version is something we can read
 	var formatByte [1]byte
@@ -113,18 +115,28 @@ func ReadPlan(src io.Reader) (*Plan, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("[DEBUG] terraform.ReadPlan B")
 	if n != len(formatByte) {
 		return nil, errors.New("failed to read plan version byte")
 	}
+
+	log.Printf("[DEBUG] terraform.ReadPlan C")
 
 	if formatByte[0] != planFormatVersion {
 		return nil, fmt.Errorf("unknown plan file version: %d", formatByte[0])
 	}
 
+	log.Printf("[DEBUG] terraform.ReadPlan D")
+
 	dec := gob.NewDecoder(src)
+	log.Printf("[DEBUG] terraform.ReadPlan E")
 	if err := dec.Decode(&result); err != nil {
+		log.Printf("[DEBUG] terraform.ReadPlan F")
 		return nil, err
 	}
+
+	log.Printf("[DEBUG] terraform.ReadPlan G")
 
 	return result, nil
 }

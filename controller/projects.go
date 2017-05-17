@@ -33,16 +33,20 @@ type projects struct {
 	store        persist.Store
 	executor     execute.Executor
 	planInterval time.Duration
+	runPlans     bool
 }
 
 // NewProjectsController creates a new controller
-func NewProjectsController(dir string, store persist.Store, executor execute.Executor, interval time.Duration) Projects {
+func NewProjectsController(dir string, store persist.Store, executor execute.Executor,
+	interval time.Duration, runPlans bool) Projects {
 
 	store.CreateNamespace(projectNS)
 
 	p := &projects{
-		store:    store,
-		executor: executor,
+		store:        store,
+		executor:     executor,
+		planInterval: interval,
+		runPlans:     runPlans,
 	}
 
 	// Start plans for existing projects

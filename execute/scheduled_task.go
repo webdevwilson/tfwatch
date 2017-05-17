@@ -21,8 +21,10 @@ func (t ScheduledTask) String() string {
 // GetTask returns a task from this
 func (t ScheduledTask) task() Task {
 	return Task{
-		Command: t.Command,
-		Args:    t.Args,
+		Command:          t.Command,
+		Args:             t.Args,
+		WorkingDirectory: t.WorkingDirectory,
+		Environment:      t.Environment,
 	}
 }
 

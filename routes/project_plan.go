@@ -1,13 +1,12 @@
 package routes
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/webdevwilson/terraform-ci/model"
 )
 
 func init() {
@@ -20,12 +19,7 @@ func init() {
 }
 
 type planDescription struct {
-	Resources []resourceChange `json:"resources"`
-}
-
-type resourceChange struct {
-	Name   string `json:"name"`
-	Action string `json:"action"`
+	Resources []model.ResourceChange `json:"resources"`
 }
 
 func projectPlanGet(req *http.Request) (data interface{}, err error) {
@@ -36,43 +30,9 @@ func projectPlanGet(req *http.Request) (data interface{}, err error) {
 		return
 	}
 
-	log.Printf("[DEBUG] Retrieving plan for project '%s'", project.GUID)
+	data = planDescription{project.PendingChanges}
 
-	tfPlan, err := project.Plan()
-
-	if err != nil {
-		log.Printf("[ERROR] Error retrieving plan for project '%s'", project.GUID)
-		return
-	}
-
-	log.Printf("[DEBUG] Retrieved plan for project '%s'", project.GUID)
-	resources := []resourceChange{}
-	for _, module := range tfPlan.Diff.Modules {
-		for id, res := range module.Resources {
-			if change := res.ChangeType(); change != terraform.DiffNone {
-				var changeStr string
-				switch change {
-				case terraform.DiffCreate:
-					changeStr = "Create"
-				case terraform.DiffDestroyCreate:
-					changeStr = "Recreate"
-				case terraform.DiffDestroy:
-					changeStr = "Destroy"
-				case terraform.DiffUpdate:
-					changeStr = "Update"
-				}
-				name := fmt.Sprintf("%s.%s", strings.Join(module.Path, "."), id)
-				resources = append(resources, resourceChange{
-					name,
-					changeStr,
-				})
-			}
-		}
-	}
-
-	data = planDescription{resources}
-
-	log.Printf("[DEBUG] Found %d resource modifications", len(resources))
+	log.Printf("[DEBUG] Found %d resource modifications", len(project.PendingChanges))
 
 	return
 }

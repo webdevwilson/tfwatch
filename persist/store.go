@@ -25,18 +25,6 @@ type Store interface {
 	// CreateNamespace ensures that a namespace exists
 	CreateNamespace(ns string) error
 
-	// HasNamespace returns whether or not a namespace exists
-	HasNamespace(ns string) bool
-
-	// RemoveNamespace deletes a namespace
-	RemoveNamespace(ns string) error
-
-	// Lock sets a lock on the namespace, when error is returned no lock was acquired
-	Lock(ns string) error
-
-	// Unlock unlocks a namespace
-	Unlock(ns string)
-
 	// Destroys the store, removing all persisted data
 	Destroy() error
 }

@@ -20,7 +20,15 @@ Get it up and running quickly in docker:
 * Generates plans when changes committed to source
 * Review and apply plans
 
-## Configure with environment variables
+## Configuration
+
+### Command Line Flags
+
+To see the command line flags for configuration.
+
+`terraform-ci -h`
+
+### Environment Variables
 
 * **CHECKOUT_DIR** - The directory that contains Terraform repositories. These must have a terraform.tfplan in them. Default is `/var/lib/terraform-ci`.
 * **CLEAR_STATE** - Clear the state when this variable is set. Default is `false`.

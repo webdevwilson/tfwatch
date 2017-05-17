@@ -16,8 +16,8 @@ func init() {
 		fs := http.FileServer(http.Dir(s.siteDir))
 
 		s.registerEndpoint("GET", "/", redirectRoot)
-		s.registerEndpoint("GET", "/site/{path:.*}", prefix("/site/dist", fs))
-		s.registerEndpoint("GET", "/static/{path:.*}", prefix("/site/dist/static", fs))
+		s.registerEndpoint("GET", "/site/{path:.*}", prefix("/site", fs))
+		s.registerEndpoint("GET", "/dist/{path:.*}", prefix("/site/dist", fs))
 	}
 }
 

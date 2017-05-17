@@ -20,54 +20,71 @@ import (
 // This will likely be discarded in favor of a 'Context' data structure that contains references to the disparate
 // systems. Even further, these systems should be communicating across a messaging channel as opposed to being
 // tightly coupled.
-type Settings struct {
+type Context struct {
 	Server   routes.HTTPServer
 	Projects controller.Projects
 }
 
-var settings *Settings
+// Options for configuring the application
+type Options struct {
+	CheckoutDir string
+	StateDir    string
+	ClearState  bool
+	LogDir      string
+	LogLevel    logutils.LogLevel
+	SiteDir     string
+	Port        uint
+	RunPlan     bool
+}
 
-const defaultCheckoutDir = "/var/lib/terraform-ci"
+// NewContext creates the execution context for server. The context is the root
+// data structure containing other data structures. The context should not be called
+// other than during initialization of the process.
+func NewContext(opts *Options) *Context {
 
-func init() {
-
-	checkoutDir := envOr("CHECKOUT_DIR", defaultCheckoutDir)
-	stateDir := envOr("STATE_DIR", path.Join(checkoutDir, ".terraform-ci"))
+	// configure checkout directory and ensure it exists
+	if _, err := os.Stat(opts.CheckoutDir); os.IsNotExist(err) {
+		log.Fatalf("[FATAL] Checkout directory \"%s\" does not exist", opts.CheckoutDir)
+	}
 
 	// clear state directory
-	if clearState := os.Getenv("CLEAR_STATE"); len(clearState) > 0 {
-		log.Printf("[WARN] Clearing state directory '%s'", stateDir)
-		err := os.RemoveAll(stateDir)
+	if opts.ClearState {
+		log.Printf("[WARN] Clearing state directory '%s'", opts.StateDir)
+		err := os.RemoveAll(opts.StateDir)
 		if err != nil {
-			log.Printf("[WARN] Error clearing state directory '%s': %s", stateDir, err)
+			log.Printf("[WARN] Error clearing state directory '%s': %s", opts.StateDir, err)
 		}
 	}
 
+	// create state directory
+	err := os.MkdirAll(opts.StateDir, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Error creating state directory '%s': %s", opts.StateDir, err)
+	}
+
 	// initialize the data store
-	store, err := persist.NewLocalFileStore(path.Join(stateDir, "data"))
+	store, err := persist.NewBoltStore(path.Join(opts.StateDir))
 	if err != nil {
 		log.Fatalf("[FATAL] Error initializing persistence: %s", err)
 	}
 
 	// logging configuration
-	logDir := envOr("LOG_DIR", path.Join(stateDir, "logs"))
-	logLevel := envOr("LOG_LEVEL", "INFO")
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-		MinLevel: logutils.LogLevel(logLevel),
+		MinLevel: logutils.LogLevel(opts.LogLevel),
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(filter)
-	log.Printf("[INFO] Log level set to %s", logLevel)
+	log.Printf("[INFO] Log level set to %s", opts.LogLevel)
 
 	// create an executor
-	executor := execute.NewExecutor(store, path.Join(logDir, "executor"))
+	executor := execute.NewExecutor(store, path.Join(opts.LogDir, "executor"))
 
 	// create the controller
-	projects := controller.NewProjectsController(checkoutDir, store, executor, 5*time.Minute)
+	projects := controller.NewProjectsController(opts.CheckoutDir, store, executor, 5*time.Minute, opts.RunPlan)
 
 	// create the HTTP server
-	accessLogDir := path.Join(logDir, "http")
+	accessLogDir := path.Join(opts.LogDir, "http")
 	err = os.MkdirAll(accessLogDir, os.ModePerm)
 	if err != nil {
 		log.Printf("[WARN] Error creating access log directory '%s': %s", accessLogDir, err)
@@ -83,30 +100,17 @@ func init() {
 	port := envOrUint("PORT", 3000)
 	server := routes.InitializeServer(port, accessLog, projects, siteDir)
 
-	// initialize settings
-	settings = &Settings{
+	// initialize the context
+	return &Context{
 		Projects: projects,
 		Server:   server,
 	}
-}
-
-// Get returns configuration data
-func Get() *Settings {
-	return settings
 }
 
 // env returns environment variables. fatal error if it does not exist
 func env(name string) (v string) {
 	if v = os.Getenv(name); len(v) == 0 {
 		log.Fatalf("[FATAL] %s variable required.", name)
-	}
-	return
-}
-
-// envOr returns the environment variable or the default values
-func envOr(name string, defaultVal string) (v string) {
-	if v = os.Getenv(name); len(v) == 0 {
-		v = defaultVal
 	}
 	return
 }
@@ -128,13 +132,4 @@ func envOrUint(name string, defaultVal uint) uint {
 	}
 
 	return uint(val)
-}
-
-// envOrFunc returns the named environment value or the result of executing the function
-func envOrFunc(name string, defaultFunc func() string) string {
-	var v string
-	if v = os.Getenv(name); len(v) == 0 {
-		v = defaultFunc()
-	}
-	return v
 }

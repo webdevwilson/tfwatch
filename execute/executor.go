@@ -1,6 +1,7 @@
 package execute
 
 import (
+	"fmt"
 	"log"
 	"path"
 
@@ -27,10 +28,8 @@ type Executor interface {
 
 // Executor is used to schedule tasks to run
 type executor struct {
-	store    persist.Store
-	logDir   string
-	taskCh   chan *ScheduledTask
-	resultCh chan *Result
+	logDir string
+	taskCh chan *ScheduledTask
 }
 
 // NewExecutor creates returns a pointer to
@@ -44,17 +43,11 @@ func NewExecutor(store persist.Store, logDir string) Executor {
 	}
 
 	exe := &executor{
-		store:    store,
-		logDir:   logDir,
-		taskCh:   make(chan *ScheduledTask, 50),
-		resultCh: make(chan *Result, 50),
+		logDir: logDir,
+		taskCh: make(chan *ScheduledTask, 50),
 	}
 
-	store.CreateNamespace(persistNamespace)
-
 	go exe.runTasks()
-
-	go exe.persistResults()
 
 	return exe
 }
@@ -71,12 +64,20 @@ func (exe *executor) runTasks() {
 	}()
 
 	for t := range exe.taskCh {
-		log.Printf("[INFO] Executing %s", t.String())
+		log.Printf("[INFO] Executing %s in directory '%s'", t.String(), t.WorkingDirectory)
 		cmd := exec.Command(t.Command, t.Args...)
 
+		// Set working directory
 		if t.WorkingDirectory != "" {
 			cmd.Dir = t.WorkingDirectory
 		}
+
+		// Configure environment variables
+		env := os.Environ()
+		for k, v := range t.Environment {
+			env = append(env, fmt.Sprintf("%s=%s", k, v))
+		}
+		cmd.Env = env
 
 		output, err := cmd.CombinedOutput()
 
@@ -113,30 +114,13 @@ func (exe *executor) runTasks() {
 		// create result, and send across channel
 		result := t.Result(statusCode, output)
 		t.writeChannel <- result
-		exe.resultCh <- result
-	}
-}
-
-// persistResults reads from resultChannel
-func (exe *executor) persistResults() {
-	for r := range exe.resultCh {
-
-		log.Printf("[INFO] Persisting result for task '%s'", r.GUID)
-
-		// persist result
-		exe.store.Create(persistNamespace, r)
-
-		// output logs
-		logFile := path.Join(exe.logDir, r.GUID)
-		err := ioutil.WriteFile(logFile, r.Output, os.ModePerm)
-		if err != nil {
-			log.Printf("[WARN] Failed to write to log file '%s': %s", logFile, err)
-		}
 	}
 }
 
 // Schedule schedules a job to be run
 func (exe *executor) Schedule(task *Task) (st *ScheduledTask, err error) {
+
+	log.Printf("[DEBUG] %d tasks in queue", len(exe.taskCh))
 
 	// Create a GUID for the task
 	uidPtr, err := uuid.NewV4()
@@ -156,20 +140,6 @@ func (exe *executor) Schedule(task *Task) (st *ScheduledTask, err error) {
 	log.Printf("[INFO] Scheduling %s", st.String())
 
 	exe.taskCh <- st
-
-	return
-}
-
-// GetResult returns a result from disk
-func (exe *executor) GetResult(guid string) (r Result, err error) {
-	// f, err := os.Open(path.Join(resultPath, guid))
-
-	if err != nil {
-		return
-	}
-
-	// read in the value
-	// err = gob.NewDecoder(f).Decode(&r)
 
 	return
 }
