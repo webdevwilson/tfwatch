@@ -14,4 +14,4 @@ RUN make build install
 
 VOLUME /var/lib/terraform-ci
 
-ENTRYPOINT [ $APP_PATH/terraform-ci ]
+ENTRYPOINT [ "terraform-ci" ]
