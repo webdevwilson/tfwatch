@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/webdevwilson/terraform-ci/config"
 	"github.com/webdevwilson/terraform-ci/model"
 )
 
@@ -169,7 +168,6 @@ func List(sockAddr string) ([]model.Project, error) {
 
 func Test_Project_API(t *testing.T) {
 	sockAddr := StartTestServer()
-	defer config.Get().Store.Destroy()
 
 	for i, v := range prjs {
 		err := Create(sockAddr, &v)

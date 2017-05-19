@@ -18,9 +18,9 @@ func Test_systemController(t *testing.T) {
 		StateDir:    "/opts/repos/.terraform-ci",
 	}
 
-	controller := systemController(opts)
+	controller := systemController(opts, nil)
 	cfg := controller.GetConfiguration()
 
-	assert.Equal(t, 2, len(*cfg))
+	assert.Equal(t, 3, len(cfg))
 	return
 }

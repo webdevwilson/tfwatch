@@ -10,23 +10,18 @@ import (
 var data = []Project{
 	Project{
 		GUID:      "0000-0000",
-		Name:      "foo",
-		LocalPath: "/foo",
+		Name:      "terraform_noplan",
+		LocalPath: "../fixtures/terraform_noplan",
 		Settings:  map[string]string{}},
 	Project{
 		GUID:      "1111-1111",
-		Name:      "bar",
-		LocalPath: "/bar",
-		Settings:  map[string]string{}},
-	Project{
-		GUID:      "2222-2222",
-		Name:      "bar",
-		LocalPath: "/Users/kerry.wilson/Documents/Projects/tf_bewell/cloudwatch_prod",
+		Name:      "terraform_planned",
+		LocalPath: "../fixtures/terraform_planned",
 		Settings:  map[string]string{}},
 }
 
 func TestProject_get(t *testing.T) {
-	lfs, err := persist.NewLocalFileStore("/Users/kerry.wilson/Documents/Projects/tf_bewell")
+	lfs, err := persist.NewLocalFileStore("./")
 	assert.NoError(t, err)
 
 	var prj Project
@@ -40,13 +35,13 @@ func TestPlan_no_plan(t *testing.T) {
 }
 
 func TestPlan_plan(t *testing.T) {
-	plan, err := data[2].Plan()
+	plan, err := data[1].Plan()
 	assert.Nil(t, err)
 	assert.NotNil(t, plan)
 }
 
 func TestPlan_changes(t *testing.T) {
-	plan, err := data[2].Plan()
+	plan, err := data[1].Plan()
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(plan.ResourceChanges()))
