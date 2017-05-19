@@ -7,5 +7,6 @@ import VueResource from 'vue-resource'
 Vue.use(VueResource)
 
 export default {
-    ProjectResource: require('./project')
+    ProjectResource: require('./project'),
+    ConfigurationResource: require('./configuration')
 }

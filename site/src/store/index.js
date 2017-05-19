@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import project from './modules/project'
+import configuration from './modules/configuration'
 
 Vue.use(Vuex)
 
@@ -13,6 +14,7 @@ export default new Vuex.Store({
     getters,
     mutations,
     modules: {
-        project
+        project,
+        configuration
     }
 })

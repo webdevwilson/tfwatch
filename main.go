@@ -63,7 +63,7 @@ func main() {
 
 	logLevel = strings.ToUpper(logLevel)
 
-	settings := config.NewContext(&config.Options{
+	ctx := config.NewContext(&config.Options{
 		CheckoutDir: checkoutDir,
 		ClearState:  clearState,
 		LogDir:      logDir,
@@ -74,7 +74,7 @@ func main() {
 		StateDir:    stateDir,
 	})
 
-	go settings.Server.Start()
+	go ctx.Server.Start()
 
 	// loop
 	for {

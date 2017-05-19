@@ -13,6 +13,18 @@
               <v-icon>notifications</v-icon>
             </v-btn>
           </v-toolbar-item>
+          <v-menu bottom origin="top right" transition="v-scale-transition">
+            <v-btn dark icon slot="activator">
+              <v-icon>settings</v-icon>
+            </v-btn>
+            <v-list>
+              <v-list-item>
+                <v-list-tile router v-bind:to="{ name: 'About' }">
+                  <v-list-tile-title>About terraform-ci</v-list-tile-title>
+                </v-list-tile>
+              </v-list-item>
+            </v-list>
+          </v-menu>
           <v-toolbar-item>
             <v-btn icon dark>
               <v-icon>account_circle</v-icon>

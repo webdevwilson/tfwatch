@@ -1,10 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
-	"strconv"
 
 	"time"
 
@@ -23,6 +23,7 @@ import (
 type Context struct {
 	Server   routes.HTTPServer
 	Projects controller.Projects
+	System   controller.System
 }
 
 // Options for configuring the application
@@ -83,6 +84,9 @@ func NewContext(opts *Options) *Context {
 	// create the controller
 	projects := controller.NewProjectsController(opts.CheckoutDir, store, executor, 5*time.Minute, opts.RunPlan)
 
+	// create the system controller
+	system := systemController(opts, executor)
+
 	// create the HTTP server
 	accessLogDir := path.Join(opts.LogDir, "http")
 	err = os.MkdirAll(accessLogDir, os.ModePerm)
@@ -96,40 +100,30 @@ func NewContext(opts *Options) *Context {
 		log.Printf("[WARN] Error opening access log: %s", err)
 	}
 
-	siteDir := os.Getenv("SITE_DIR")
-	port := envOrUint("PORT", 3000)
-	server := routes.InitializeServer(port, accessLog, projects, siteDir)
+	siteDir := opts.SiteDir
+	port := opts.Port
+	server := routes.InitializeServer(port, accessLog, system, projects, siteDir)
 
 	// initialize the context
 	return &Context{
 		Projects: projects,
 		Server:   server,
+		System:   system,
 	}
 }
 
-// env returns environment variables. fatal error if it does not exist
-func env(name string) (v string) {
-	if v = os.Getenv(name); len(v) == 0 {
-		log.Fatalf("[FATAL] %s variable required.", name)
-	}
-	return
+func systemController(opts *Options, executor execute.Executor) controller.System {
+	config := make([]*controller.SystemConfigurationValue, 3)
+	config[0] = cfg("CheckoutDir", "Checkout Directory", opts.CheckoutDir)
+	config[1] = cfg("LogLevel", "Log Level", string(opts.LogLevel))
+	config[2] = cfg("Port", "HTTP Port", fmt.Sprintf("%d", opts.Port))
+	return controller.NewSystemController(config, executor)
 }
 
-// envOrInt returns the int representation of the environment variable or the default
-func envOrUint(name string, defaultVal uint) uint {
-	var v string
-
-	// does an environment variable exist?
-	if v = os.Getenv(name); len(v) == 0 {
-		return defaultVal
+func cfg(id, name, value string) *controller.SystemConfigurationValue {
+	return &controller.SystemConfigurationValue{
+		ID:    id,
+		Name:  name,
+		Value: value,
 	}
-
-	// convert environment variable
-	val, err := strconv.Atoi(v)
-	if err != nil {
-		log.Printf("[WARN] Invalid int given for PORT environment variable: %s", err)
-		return defaultVal
-	}
-
-	return uint(val)
 }

@@ -24,12 +24,12 @@
     </div>
 </template>
 <script>
-    import ProjectList from './dashboard/ProjectList.vue'
     import ExecutionList from './dashboard/ExecutionList.vue'
+    import ProjectList from './dashboard/ProjectList.vue'
     export default {
         components: {
-            ProjectList,
-            ExecutionList
+            ExecutionList,
+            ProjectList
         }
     }
 </script>

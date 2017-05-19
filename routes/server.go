@@ -22,6 +22,7 @@ type server struct {
 	accessLog io.Writer
 	projects  controller.Projects
 	router    *mux.Router
+	system    controller.System
 	siteDir   string
 }
 
@@ -38,7 +39,7 @@ func projectsController() controller.Projects {
 }
 
 // InitializeServer creates an HTTPServer
-func InitializeServer(port uint, accessLog io.Writer, projects controller.Projects, siteDir string) HTTPServer {
+func InitializeServer(port uint, accessLog io.Writer, system controller.System, projects controller.Projects, siteDir string) HTTPServer {
 	serverSingleton.init.Do(func() {
 		serverSingleton.instance = &server{
 			port:      port,
@@ -46,6 +47,7 @@ func InitializeServer(port uint, accessLog io.Writer, projects controller.Projec
 			projects:  projects,
 			router:    mux.NewRouter(),
 			siteDir:   siteDir,
+			system:    system,
 		}
 	})
 
