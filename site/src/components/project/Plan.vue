@@ -12,6 +12,9 @@
         <v-card-text v-if="project.status == 'ok'">
             <p>The project is up-to-date.</p>
         </v-card-text>
+        <v-card-text v-if="project.status == 'error'">
+            <p class="red--text">This project contains errors. Please view the logs to get more information.</p>
+        </v-card-text>
         <v-card-text v-if="project.status == 'pending'">
             <v-card>
                 <v-toolbar>
