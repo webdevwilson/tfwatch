@@ -20,5 +20,5 @@ func GetProject(name Fixture) (*model.Project, error) {
 		return nil, err
 	}
 
-	model.NewProject(name, path.Join(wd, name))
+	return model.NewProject(string(name), path.Join(wd, string(name))), nil
 }

@@ -59,17 +59,17 @@ func (p *projects) planComplete(prj *model.Project, ch <-chan *execute.Result, d
 	prj.PlanUpdated = time.Now()
 	switch r.ExitCode {
 	case 0:
-		prj.Status = "ok"
+		prj.Status = model.ProjectStatusOK
 	case 2:
-		prj.Status = "pending"
+		prj.Status = model.ProjectStatusPending
 	default:
-		prj.Status = "error"
+		prj.Status = model.ProjectStatusError
 		log.Printf("[WARN] Plan failed on %s: %s", prj.Name, r.Output)
 	}
 	log.Printf("[INFO] Project '%s' plan complete, updating status to '%s'", prj.GUID, prj.Status)
 
 	// read the plan and add changes to project
-	if prj.Status == "pending" {
+	if prj.Status == model.ProjectStatusPending {
 		plan, err := prj.Plan()
 
 		if err != nil {

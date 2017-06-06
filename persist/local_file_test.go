@@ -8,6 +8,7 @@ import (
 
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/webdevwilson/terraform-ci/test"
 )
 
 type data struct {
@@ -46,6 +47,11 @@ func createStore() (*localFileStore, func()) {
 			log.Printf("[ERROR] Error cleaning up unit tests")
 		}
 	}
+}
+
+func TestMain(m *testing.M) {
+	test.SuppressLogs()
+	os.Exit(m.Run())
 }
 
 func Test_CreateNamespace(t *testing.T) {
@@ -239,23 +245,4 @@ func Test_Delete(t *testing.T) {
 	if err != nil && !notExist {
 		t.Error(err)
 	}
-}
-
-func Test_HasNamespace_Returns_False_When_Namespace_Not_Created(t *testing.T) {
-	store, cleanup := createStore()
-	defer cleanup()
-
-	assert.Equal(t, false, store.HasNamespace(t.Name()))
-}
-
-func Test_HasNamespace_Returns_True_When_Namespace_Is_Created(t *testing.T) {
-	store, cleanup := createStore()
-	defer cleanup()
-
-	err := store.CreateNamespace(t.Name())
-	if err != nil {
-		t.Error(err)
-	}
-
-	assert.Equal(t, true, store.HasNamespace(t.Name()))
 }

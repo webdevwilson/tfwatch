@@ -1,6 +1,7 @@
 .state
 main
 terraform-ci
+fixtures/.terraform-ci
 doc
 routes/site_static.go
 tmp

@@ -12,6 +12,15 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+type ProjectStatus string
+
+const (
+	ProjectStatusNew     ProjectStatus = "new"
+	ProjectStatusError   ProjectStatus = "error"
+	ProjectStatusOK      ProjectStatus = "ok"
+	ProjectStatusPending ProjectStatus = "pending"
+)
+
 // Project top-level data structure
 type Project struct {
 	GUID           string            `json:"guid,omitempty"`
@@ -19,7 +28,7 @@ type Project struct {
 	Settings       map[string]string `json:"settings,omitempty"`
 	PlanUpdated    time.Time         `json:"plan_updated,omitempty"`
 	PendingChanges []ResourceChange  `json:"pending_changes"`
-	Status         string            `json:"status,omitempty"`
+	Status         ProjectStatus     `json:"status,omitempty"`
 	LocalPath      string            `json:"-"`
 }
 

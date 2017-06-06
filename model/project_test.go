@@ -1,10 +1,12 @@
 package model
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/webdevwilson/terraform-ci/persist"
+	"github.com/webdevwilson/terraform-ci/test"
 )
 
 var data = []Project{
@@ -18,6 +20,11 @@ var data = []Project{
 		Name:      "terraform_planned",
 		LocalPath: "../fixtures/terraform_planned",
 		Settings:  map[string]string{}},
+}
+
+func TestMain(m *testing.M) {
+	test.SuppressLogs()
+	os.Exit(m.Run())
 }
 
 func TestProject_get(t *testing.T) {

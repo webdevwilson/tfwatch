@@ -70,13 +70,7 @@ func NewContext(opts *Options) *Context {
 	}
 
 	// logging configuration
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-		MinLevel: logutils.LogLevel(opts.LogLevel),
-		Writer:   os.Stderr,
-	}
-	log.SetOutput(filter)
-	log.Printf("[INFO] Log level set to %s", opts.LogLevel)
+	configureLogging(opts.LogLevel)
 
 	// create an executor
 	executor := execute.NewExecutor(store, path.Join(opts.LogDir, "executor"))
@@ -110,6 +104,16 @@ func NewContext(opts *Options) *Context {
 		Server:   server,
 		System:   system,
 	}
+}
+
+func configureLogging(level logutils.LogLevel) {
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
+		MinLevel: level,
+		Writer:   os.Stderr,
+	}
+	log.SetOutput(filter)
+	log.Printf("[INFO] Log level set to %s", level)
 }
 
 func systemController(opts *Options, executor execute.Executor) controller.System {

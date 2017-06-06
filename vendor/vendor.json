@@ -183,6 +183,12 @@
 			"revisionTime": "2013-08-28T17:13:25Z"
 		},
 		{
+			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "346938d642f2ec3594ed81d874461961cd0faa76",
+			"revisionTime": "2016-10-29T20:57:26Z"
+		},
+		{
 			"checksumSHA1": "GFCSxp+N669T31OCBXuBRcX82MA=",
 			"path": "github.com/dchest/authcookie",
 			"revision": "fbdef6e998665bcb27a2227f39d840dbfc62a918",
@@ -423,10 +429,22 @@
 			"revisionTime": "2013-12-21T20:05:32Z"
 		},
 		{
+			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "792786c7400a136282c1664665ae0a8db921c6c2",
+			"revisionTime": "2016-01-10T10:55:54Z"
+		},
+		{
 			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
 			"path": "github.com/satori/go.uuid",
 			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
 			"revisionTime": "2017-03-21T23:07:31Z"
+		},
+		{
+			"checksumSHA1": "JrOt/M8No13ZxxdPhpTC7YUBWDY=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "e964b172ca7f4c322ee4c39ea605ff53fab44f79",
+			"revisionTime": "2017-05-27T06:30:11Z"
 		},
 		{
 			"checksumSHA1": "rtP7SG5UbT9YRpEjJlQUMRCuEqA=",
