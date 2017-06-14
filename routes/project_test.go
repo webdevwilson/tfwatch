@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/webdevwilson/terraform-ci/client"
-	"github.com/webdevwilson/terraform-ci/controller"
-	"github.com/webdevwilson/terraform-ci/execute"
-	"github.com/webdevwilson/terraform-ci/model"
-	"github.com/webdevwilson/terraform-ci/persist"
-	"github.com/webdevwilson/terraform-ci/test"
+	"github.com/webdevwilson/tfwatch/client"
+	"github.com/webdevwilson/tfwatch/controller"
+	"github.com/webdevwilson/tfwatch/execute"
+	"github.com/webdevwilson/tfwatch/model"
+	"github.com/webdevwilson/tfwatch/persist"
+	"github.com/webdevwilson/tfwatch/test"
 )
 
 var project = model.Project{
@@ -44,7 +44,7 @@ func startTestServer() string {
 	// use fixtures directory
 	checkoutDir := path.Clean(path.Join(cwd, "..", "fixtures"))
 	siteDir := path.Clean(path.Join(cwd, "..", "site", "dist"))
-	stateDir := path.Join(checkoutDir, ".terraform-ci")
+	stateDir := path.Join(checkoutDir, ".tfwatch")
 	logDir := path.Join(stateDir, "logs")
 
 	store, _ := persist.NewBoltStore(stateDir)

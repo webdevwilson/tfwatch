@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/webdevwilson/terraform-ci/execute"
-	"github.com/webdevwilson/terraform-ci/model"
+	"github.com/webdevwilson/tfwatch/execute"
+	"github.com/webdevwilson/tfwatch/model"
 )
 
 // schedulePlan schedules a plan to run in a project, then waits and schedules it again

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/webdevwilson/terraform-ci/model"
+	"github.com/webdevwilson/tfwatch/model"
 )
 
 func init() {

@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/logutils"
-	"github.com/webdevwilson/terraform-ci/controller"
-	"github.com/webdevwilson/terraform-ci/execute"
-	"github.com/webdevwilson/terraform-ci/persist"
-	"github.com/webdevwilson/terraform-ci/routes"
+	"github.com/webdevwilson/tfwatch/controller"
+	"github.com/webdevwilson/tfwatch/execute"
+	"github.com/webdevwilson/tfwatch/persist"
+	"github.com/webdevwilson/tfwatch/routes"
 )
 
 // Settings contains all the configuration values for the service. Do not put public stuff
@@ -34,7 +34,7 @@ type Options struct {
 	LogDir      string
 	LogLevel    logutils.LogLevel
 	SiteDir     string
-	Port        uint
+	Port        uint16
 	RunPlan     bool
 }
 

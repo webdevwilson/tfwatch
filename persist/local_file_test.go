@@ -8,7 +8,7 @@ import (
 
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/webdevwilson/terraform-ci/test"
+	"github.com/webdevwilson/tfwatch/test"
 )
 
 type data struct {

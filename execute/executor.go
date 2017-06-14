@@ -16,7 +16,7 @@ import (
 	"io/ioutil"
 
 	uuid "github.com/nu7hatch/gouuid"
-	"github.com/webdevwilson/terraform-ci/persist"
+	"github.com/webdevwilson/tfwatch/persist"
 )
 
 const persistNamespace = "executions"

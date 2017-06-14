@@ -4,9 +4,9 @@
     <v-list-item v-for="prj in projects" :key="prj.guid">
       <v-list-tile avatar router v-bind:to="{ name: 'Project', params: { guid: prj.guid }}">
         <v-list-tile-avatar>
-          <v-icon v-tooltip:top="{ html: 'Up-to-date' }" v-if="prj.status == 'ok'" large class="green--text text--darken-1">check_circle</v-icon>
-          <v-icon v-tooltip:top="{ html: 'Pending Changes' }" v-if="prj.status == 'pending'" v-badge="{ value: prj.pending_changes.length, left: true, overlap: true }" large class="blue--text text--darken-1 red--after">info</v-icon>
-          <v-icon v-tooltip:top="{ html: 'Error' }" v-if="prj.status == 'error'" large class="red--text text--darken-1">error</v-icon>
+          <v-icon v-tooltip:top="{ html: 'Up-to-date' }" v-if="prj.status == 'ok'" large class="gray--text text--darken-1">library_books</v-icon>
+          <v-icon v-tooltip:top="{ html: 'Pending Changes' }" v-if="prj.status == 'pending'" v-badge="{ value: prj.pending_changes.length, left: true, overlap: true }" large class="gray--text text--darken-1 orange--after">library_books</v-icon>
+          <v-icon v-tooltip:top="{ html: 'Error' }" v-if="prj.status == 'error'" v-badge="{ value: '!', left: true, overlap: true }" large class="gray--text text--darken-1 red--after">library_books</v-icon>
         </v-list-tile-avatar>
         <v-list-tile-content>
           <v-list-tile-title>{{prj.name}}</v-list-tile-title>

@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/webdevwilson/terraform-ci/controller"
+	"github.com/webdevwilson/tfwatch/controller"
 )
 
 // HTTPServer

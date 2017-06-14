@@ -5,7 +5,7 @@ import (
 
 	"strings"
 
-	"github.com/webdevwilson/terraform-ci/execute"
+	"github.com/webdevwilson/tfwatch/execute"
 )
 
 type SystemConfigurationValue struct {

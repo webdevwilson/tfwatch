@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/webdevwilson/terraform-ci/model"
+	"github.com/webdevwilson/tfwatch/model"
 )
 
 type Projects struct {

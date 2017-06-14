@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/logutils"
-	"github.com/webdevwilson/terraform-ci/config"
-	_ "github.com/webdevwilson/terraform-ci/execute"
+	"github.com/webdevwilson/tfwatch/config"
+	_ "github.com/webdevwilson/tfwatch/execute"
 )
 
 func main() {
@@ -19,13 +19,13 @@ func main() {
 	var port uint
 	var clearState, help, noPlanRuns, verbose bool
 
-	flags := flag.NewFlagSet("terraform-ci", flag.ExitOnError)
+	flags := flag.NewFlagSet("tfwatch", flag.ExitOnError)
 	flags.BoolVar(&clearState, "clear-state", false, "Remove all state before starting")
 	flags.BoolVar(&help, "h", false, "")
 	flags.BoolVar(&help, "help", false, "Display usage information")
 	flags.StringVar(&logDir, "log-dir", "", "Directory the logs will be placed in")
 	flags.StringVar(&logLevel, "log-level", envOr("LOG_LEVEL", "INFO"), "Log level. One of DEBUG, INFO, WARN, ERROR")
-	flags.BoolVar(&noPlanRuns, "no-plans", false, "Prevents terraform-ci from updating the plans")
+	flags.BoolVar(&noPlanRuns, "no-plans", false, "Prevents tfwatch from updating the plans")
 	flags.UintVar(&port, "port", 3000, "Defines port HTTP server will bind to")
 	flags.StringVar(&siteDir, "site-dir", envOr("SITE_DIR", "site"), "Directory site is served from")
 	flags.StringVar(&stateDir, "state-dir", envOr("STATE_DIR", ""), "Directory where state is stored")
@@ -54,7 +54,7 @@ func main() {
 
 	// set defaults that use checkout directory
 	if stateDir == "" {
-		stateDir = path.Join(checkoutDir, ".terraform-ci")
+		stateDir = path.Join(checkoutDir, ".tfwatch")
 	}
 
 	if logDir == "" {
@@ -68,7 +68,7 @@ func main() {
 		ClearState:  clearState,
 		LogDir:      logDir,
 		LogLevel:    logutils.LogLevel(logLevel),
-		Port:        port,
+		Port:        uint16(port),
 		RunPlan:     !noPlanRuns,
 		SiteDir:     siteDir,
 		StateDir:    stateDir,

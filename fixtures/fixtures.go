@@ -4,7 +4,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/webdevwilson/terraform-ci/model"
+	"github.com/webdevwilson/tfwatch/model"
 )
 
 type Fixture string

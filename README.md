@@ -1,8 +1,8 @@
-# terraform-ci 
+# tfwatch 
 
 Continuous integration service for [Terraform](https://terraform.io). 
 
-* Build Status - [![CircleCI](https://circleci.com/gh/webdevwilson/terraform-ci.svg?style=svg)](https://circleci.com/gh/webdevwilson/terraform-ci)
+* Build Status - [![CircleCI](https://circleci.com/gh/webdevwilson/tfwatch.svg?style=svg)](https://circleci.com/gh/webdevwilson/tfwatch)
 
 ## Current State
 
@@ -12,7 +12,7 @@ Continuous integration service for [Terraform](https://terraform.io).
 
 Get it up and running quickly in docker:
 
-`docker run -v $CHECKOUT_DIR:/var/lib/terraform-ci --expose=3000 webdevwilson/terraform-ci /var/lib/terraform-ci`
+`docker run --expose=3000 webdevwilson/tfwatch /var/lib/tfwatch`
 
 ## Planned Features
 
@@ -26,21 +26,21 @@ Get it up and running quickly in docker:
 
 To see the command line flags for configuration.
 
-`terraform-ci -h`
+`tfwatch -h`
 
 ### Environment Variables
 
-* **CHECKOUT_DIR** - The directory that contains Terraform repositories. These must have a terraform.tfplan in them. Default is `/var/lib/terraform-ci`.
+* **CHECKOUT_DIR** - The directory that contains Terraform repositories. These must have a terraform.tfplan in them. Default is `/var/lib/tfwatch`.
 * **CLEAR_STATE** - Clear the state when this variable is set. Default is `false`.
 * **LOG_LEVEL** - Valid values are: `DEBUG`, `INFO`, `WARN`, `ERROR`. Default is `INFO`.
 * **PLAN_INTERVAL** - The number of minutes between plan refreshes. Default is `5`.
 * **PORT** - The port the HTTP server will bind to. Default is `3000`.
-* **STATE_DIR** - The location where state is stored on disk. Default is `.terraform-ci-data/projects`.
+* **STATE_DIR** - The location where state is stored on disk. Default is `.tfwatch/projects`.
 * **SITE_DIR** - Directory containing static site resources. Default is `site/dist`.
 
 ## Developing
 
-You can download the latest release from the [Releases](https://github.com/webdevwilson/terraform-ci/releases) page.
+You can download the latest release from the [Releases](https://github.com/webdevwilson/tfwatch/releases) page.
 
 ### Backend
 

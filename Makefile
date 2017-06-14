@@ -1,11 +1,15 @@
 TEST?=$$(go list ./... | grep -v '/vendor/')
 
-APP:=terraform-ci
+APP:=tfwatch
 VERSION:=0.0.2
 
 # Docker variables
 DOCKER_HOST:=webdevwilson
 DOCKER_NAME:=$(DOCKER_HOST)/$(APP)
+
+docker_builder:
+	@echo [docker_builder] Building docker
+	docker build -file docker/Dockerfile-build -tag tfwatch-builder .
 
 default: test build
 
@@ -25,14 +29,14 @@ site/dist:
 	npm install && \
 	npm run build
 
-terraform-ci: site/dist
-	go build -o terraform-ci main.go
+tfwatch: site/dist
+	go build -o tfwatch main.go
 
-build: terraform-ci
+build: tfwatch
 	
 install: build
 	mkdir -p $(GOPATH)/bin
-	cp terraform-ci $(GOPATH)/bin/
+	cp tfwatch $(GOPATH)/bin/
 
 docker-build: site/dist
 	docker build -t $(DOCKER_NAME) .

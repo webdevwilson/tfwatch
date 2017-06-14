@@ -8,14 +8,14 @@ import (
 
 	"time"
 
-	"github.com/webdevwilson/terraform-ci/execute"
-	"github.com/webdevwilson/terraform-ci/model"
-	"github.com/webdevwilson/terraform-ci/persist"
+	"github.com/webdevwilson/tfwatch/execute"
+	"github.com/webdevwilson/tfwatch/model"
+	"github.com/webdevwilson/tfwatch/persist"
 )
 
 const projectNS = "projects"
 
-var bootstrapIgnores = []string{".git", ".terraform-ci", "node_modules"}
+var bootstrapIgnores = []string{".git", ".tfwatch", "node_modules"}
 
 // Projects hosts the business logic for projects
 type Projects interface {

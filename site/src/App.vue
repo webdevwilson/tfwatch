@@ -5,7 +5,7 @@
         <v-btn router :to="{ name: 'Dashboard'}" icon dark>
           <v-icon>home</v-icon>
         </v-btn>
-        <v-toolbar-title class="hidden-sm-and-down">terraform-ci</v-toolbar-title>
+        <v-toolbar-title class="hidden-sm-and-down">tfwatch</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-toolbar-items>
           <v-toolbar-item>
@@ -20,7 +20,7 @@
             <v-list>
               <v-list-item>
                 <v-list-tile router v-bind:to="{ name: 'About' }">
-                  <v-list-tile-title>About terraform-ci</v-list-tile-title>
+                  <v-list-tile-title>About tfwatch</v-list-tile-title>
                 </v-list-tile>
               </v-list-item>
             </v-list>

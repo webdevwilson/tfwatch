@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/webdevwilson/terraform-ci/persist"
-	"github.com/webdevwilson/terraform-ci/test"
+	"github.com/webdevwilson/tfwatch/persist"
+	"github.com/webdevwilson/tfwatch/test"
 )
 
 var data = []Project{
