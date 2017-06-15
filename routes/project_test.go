@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/webdevwilson/tfwatch/client"
 	"github.com/webdevwilson/tfwatch/controller"
 	"github.com/webdevwilson/tfwatch/execute"
@@ -47,7 +46,7 @@ func startTestServer() string {
 	stateDir := path.Join(checkoutDir, ".tfwatch")
 	logDir := path.Join(stateDir, "logs")
 
-	store, _ := persist.NewBoltStore(stateDir)
+	store, err := persist.NewBoltStore(stateDir)
 	if err != nil {
 		panic(err)
 	}
@@ -71,65 +70,4 @@ func Test_Project_Create(t *testing.T) {
 	}
 
 	projects.Delete(project.GUID)
-}
-
-func Test_Project_API(t *testing.T) {
-	sockAddr := startTestServer()
-	projects := client.NewProjectClient(sockAddr)
-
-	for i, v := range prjs {
-		err := projects.Create(&v)
-		prjs[i].GUID = v.GUID
-		if err != nil {
-			t.Error(err)
-		}
-	}
-
-	prj, err := projects.Get(prjs[0].GUID)
-
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	assert.NotEmpty(t, prj.GUID)
-	assert.Equal(t, prjs[0].Name, prj.Name)
-	assert.Equal(t, prjs[0].Settings["FOO"], prj.Settings["FOO"])
-
-	prjs[1].Name = "abc"
-	guid := prjs[1].GUID
-	err = projects.Update(&prjs[1])
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	assert.Equal(t, guid, prjs[1].GUID)
-	assert.Equal(t, "abc", prjs[1].Name)
-
-	// do list
-	list, err := projects.List()
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	assert.Equal(t, len(prjs)+3, len(list))
-
-	// do delete
-	err = projects.Delete(prjs[1].GUID)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	// verify delete
-	list, err = projects.List()
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	assert.Equal(t, len(prjs)+2, len(list))
-
 }

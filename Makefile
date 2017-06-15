@@ -1,15 +1,14 @@
 TEST?=$$(go list ./... | grep -v '/vendor/')
+GOLANG_VERSION=1.8
+WD=$(shell pwd)
 
+# App information
 APP:=tfwatch
-VERSION:=0.0.2
+VERSION:=$(shell cat VERSION)
 
 # Docker variables
 DOCKER_HOST:=webdevwilson
 DOCKER_NAME:=$(DOCKER_HOST)/$(APP)
-
-docker_builder:
-	@echo [docker_builder] Building docker
-	docker build -file docker/Dockerfile-build -tag tfwatch-builder .
 
 default: test build
 
@@ -18,28 +17,41 @@ tools:
 	go get -u github.com/pilu/fresh
 	
 test:
-	echo $(TEST) | \
+	@echo "[test] Running tests..."
+	@echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=60s -parallel=4
 
 clean:
+	@echo "[clean] Removing build artifacts"
 	rm -rf site/dist
+	rm -f tfwatch
+
+deps:
+	@cd site && $(MAKE) deps
 
 site/dist:
-	cd site && \
-	npm install && \
-	npm run build
+	@echo "[site] Building site"
+	cd site && $(MAKE)
 
-tfwatch: site/dist
-	go build -o tfwatch main.go
+site: site/dist
+
+tfwatch:
+	@echo "[build] Building tfwatch"
+	docker run --rm \
+		-w /usr/local/go/src/github.com/webdevwilson/tfwatch \
+		-v $(WD):/usr/local/go/src/github.com/webdevwilson/tfwatch \
+		golang:$(GOLANG_VERSION) \
+		go build -o tfwatch main.go
 
 build: tfwatch
 	
 install: build
-	mkdir -p $(GOPATH)/bin
-	cp tfwatch $(GOPATH)/bin/
+	@echo "[install] Installing tfwatch to $(GOPATH)/bin"
+	@mkdir -p $(GOPATH)/bin
+	@cp tfwatch $(GOPATH)/bin/
 
-docker-build: site/dist
+docker: build site
 	docker build -t $(DOCKER_NAME) .
 	docker tag $(DOCKER_NAME) $(DOCKER_NAME):$(VERSION)
 
-.PHONY: test tools build install docker-build
+.PHONY: tools test clean site build install docker

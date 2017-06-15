@@ -1,7 +1,17 @@
+machine:
+  services:
+    - docker
+
 dependencies:
   override:
-    - make tools
+    - docker info
 
 compile:
   override:
-    - make build
+    - make site build
+
+  deployment:
+    hub:
+      branch: master
+        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+        - docker push webdevwilson/tfwatch
