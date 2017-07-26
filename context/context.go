@@ -1,15 +1,11 @@
-package config
+package context
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path"
-
 	"time"
 
-	"github.com/hashicorp/logutils"
-	"github.com/webdevwilson/tfwatch/controller"
 	"github.com/webdevwilson/tfwatch/execute"
 	"github.com/webdevwilson/tfwatch/persist"
 	"github.com/webdevwilson/tfwatch/routes"
@@ -20,28 +16,16 @@ import (
 // This will likely be discarded in favor of a 'Context' data structure that contains references to the disparate
 // systems. Even further, these systems should be communicating across a messaging channel as opposed to being
 // tightly coupled.
-type Context struct {
+type Instance struct {
 	Server   routes.HTTPServer
 	Projects controller.Projects
 	System   controller.System
 }
 
-// Options for configuring the application
-type Options struct {
-	CheckoutDir string
-	StateDir    string
-	ClearState  bool
-	LogDir      string
-	LogLevel    logutils.LogLevel
-	SiteDir     string
-	Port        uint16
-	RunPlan     bool
-}
-
 // NewContext creates the execution context for server. The context is the root
 // data structure containing other data structures. The context should not be called
 // other than during initialization of the process.
-func NewContext(opts *Options) *Context {
+func NewContext(opts *Options) *Instance {
 
 	// configure checkout directory and ensure it exists
 	if _, err := os.Stat(opts.CheckoutDir); os.IsNotExist(err) {
@@ -103,31 +87,5 @@ func NewContext(opts *Options) *Context {
 		Projects: projects,
 		Server:   server,
 		System:   system,
-	}
-}
-
-func configureLogging(level logutils.LogLevel) {
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-		MinLevel: level,
-		Writer:   os.Stderr,
-	}
-	log.SetOutput(filter)
-	log.Printf("[INFO] Log level set to %s", level)
-}
-
-func systemController(opts *Options, executor execute.Executor) controller.System {
-	config := make([]*controller.SystemConfigurationValue, 3)
-	config[0] = cfg("CheckoutDir", "Checkout Directory", opts.CheckoutDir)
-	config[1] = cfg("LogLevel", "Log Level", string(opts.LogLevel))
-	config[2] = cfg("Port", "HTTP Port", fmt.Sprintf("%d", opts.Port))
-	return controller.NewSystemController(config, executor)
-}
-
-func cfg(id, name, value string) *controller.SystemConfigurationValue {
-	return &controller.SystemConfigurationValue{
-		ID:    id,
-		Name:  name,
-		Value: value,
 	}
 }
