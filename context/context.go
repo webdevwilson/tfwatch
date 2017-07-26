@@ -6,6 +6,9 @@ import (
 	"path"
 	"time"
 
+	"fmt"
+	"github.com/hashicorp/logutils"
+	"github.com/webdevwilson/tfwatch/controller"
 	"github.com/webdevwilson/tfwatch/execute"
 	"github.com/webdevwilson/tfwatch/persist"
 	"github.com/webdevwilson/tfwatch/routes"
@@ -22,51 +25,63 @@ type Instance struct {
 	System   controller.System
 }
 
+// Configuration settings for the application
+type Configuration struct {
+	CheckoutDir string
+	StateDir    string
+	ClearState  bool
+	LogDir      string
+	LogLevel    logutils.LogLevel
+	SiteDir     string
+	Port        uint16
+	RunPlan     bool
+}
+
 // NewContext creates the execution context for server. The context is the root
 // data structure containing other data structures. The context should not be called
 // other than during initialization of the process.
-func NewContext(opts *Options) *Instance {
+func NewContext(cfg *Configuration) *Instance {
 
 	// configure checkout directory and ensure it exists
-	if _, err := os.Stat(opts.CheckoutDir); os.IsNotExist(err) {
-		log.Fatalf("[FATAL] Checkout directory \"%s\" does not exist", opts.CheckoutDir)
+	if _, err := os.Stat(cfg.CheckoutDir); os.IsNotExist(err) {
+		log.Fatalf("[FATAL] Checkout directory \"%s\" does not exist", cfg.CheckoutDir)
 	}
 
 	// clear state directory
-	if opts.ClearState {
-		log.Printf("[WARN] Clearing state directory '%s'", opts.StateDir)
-		err := os.RemoveAll(opts.StateDir)
+	if cfg.ClearState {
+		log.Printf("[WARN] Clearing state directory '%s'", cfg.StateDir)
+		err := os.RemoveAll(cfg.StateDir)
 		if err != nil {
-			log.Printf("[WARN] Error clearing state directory '%s': %s", opts.StateDir, err)
+			log.Printf("[WARN] Error clearing state directory '%s': %s", cfg.StateDir, err)
 		}
 	}
 
 	// create state directory
-	err := os.MkdirAll(opts.StateDir, os.ModePerm)
+	err := os.MkdirAll(cfg.StateDir, os.ModePerm)
 	if err != nil {
-		log.Fatalf("Error creating state directory '%s': %s", opts.StateDir, err)
+		log.Fatalf("Error creating state directory '%s': %s", cfg.StateDir, err)
 	}
 
 	// initialize the data store
-	store, err := persist.NewBoltStore(path.Join(opts.StateDir))
+	store, err := persist.NewBoltStore(path.Join(cfg.StateDir))
 	if err != nil {
 		log.Fatalf("[FATAL] Error initializing persistence: %s", err)
 	}
 
 	// logging configuration
-	configureLogging(opts.LogLevel)
+	configureLogging(cfg.LogLevel)
 
 	// create an executor
-	executor := execute.NewExecutor(store, path.Join(opts.LogDir, "executor"))
+	executor := execute.NewExecutor(store, path.Join(cfg.LogDir, "executor"))
 
 	// create the controller
-	projects := controller.NewProjectsController(opts.CheckoutDir, store, executor, 5*time.Minute, opts.RunPlan)
+	projects := controller.NewProjectsController(cfg.CheckoutDir, store, executor, 5*time.Minute, cfg.RunPlan)
 
 	// create the system controller
-	system := systemController(opts, executor)
+	system := controller.NewSystemController(systemConfigValues(cfg), executor)
 
 	// create the HTTP server
-	accessLogDir := path.Join(opts.LogDir, "http")
+	accessLogDir := path.Join(cfg.LogDir, "http")
 	err = os.MkdirAll(accessLogDir, os.ModePerm)
 	if err != nil {
 		log.Printf("[WARN] Error creating access log directory '%s': %s", accessLogDir, err)
@@ -78,14 +93,32 @@ func NewContext(opts *Options) *Instance {
 		log.Printf("[WARN] Error opening access log: %s", err)
 	}
 
-	siteDir := opts.SiteDir
-	port := opts.Port
+	siteDir := cfg.SiteDir
+	port := cfg.Port
 	server := routes.InitializeServer(port, accessLog, system, projects, siteDir)
 
 	// initialize the context
-	return &Context{
+	return &Instance{
 		Projects: projects,
 		Server:   server,
 		System:   system,
+	}
+}
+
+func configureLogging(level logutils.LogLevel) {
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
+		MinLevel: level,
+		Writer:   os.Stderr,
+	}
+	log.SetOutput(filter)
+	log.Printf("[INFO] Log level set to %s", level)
+}
+
+func systemConfigValues(cfg *Configuration) []controller.SystemConfigurationValue {
+	return []controller.SystemConfigurationValue{
+		{"CheckoutDir", "Checkout Directory", cfg.CheckoutDir},
+		{"LogLevel", "Log Level", string(cfg.LogLevel)},
+		{"Port", "HTTP Port", fmt.Sprintf("%d", cfg.Port)},
 	}
 }

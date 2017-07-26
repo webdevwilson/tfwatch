@@ -1,6 +1,6 @@
 # tfwatch 
 
-Continuous integration service for [Terraform](https://terraform.io). 
+Continuous infrastructure service for [Terraform](https://terraform.io). 
 
 * Build Status - [![CircleCI](https://circleci.com/gh/webdevwilson/tfwatch.svg?style=svg)](https://circleci.com/gh/webdevwilson/tfwatch)
 

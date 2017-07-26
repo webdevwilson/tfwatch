@@ -1,17 +1,9 @@
-FROM hashicorp/terraform:full
+FROM hashicorp/terraform:light
 MAINTAINER "Kerry Wilson <kwilson@goodercode.com>"
 
-RUN apk add --update make nodejs
-
-ENV APP_PATH=$GOPATH/src/github.com/webdevwilson/tfwatch
-
-WORKDIR $APP_PATH
-
 # Copy sources
-ADD . $APP_PATH
+ADD tfwatch /bin/tfwatch
 
-RUN make build install
+ADD site/dist /opt/site
 
-VOLUME /var/lib/tfwatch
-
-ENTRYPOINT [ "tfwatch" ]
+ENTRYPOINT [ "/bin/tfwatch", "--site-dir", "/opt/site", "/usr/src" ]

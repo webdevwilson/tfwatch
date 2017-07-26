@@ -1,5 +1,5 @@
 TEST?=$$(go list ./... | grep -v '/vendor/')
-GOLANG_VERSION=1.8
+GOLANG_VERSION=1.8-alpine
 WD=$(shell pwd)
 
 # App information
@@ -9,6 +9,10 @@ VERSION:=$(shell cat VERSION)
 # Docker variables
 DOCKER_HOST:=webdevwilson
 DOCKER_NAME:=$(DOCKER_HOST)/$(APP)
+DOCKER_DIR:=/usr/local/go/src/github.com/webdevwilson/tfwatch
+DOCKER_OPTS:=--rm -w $(DOCKER_DIR) \
+		-v $(WD):$(DOCKER_DIR) \
+		golang:$(GOLANG_VERSION)
 
 default: test build
 
@@ -37,18 +41,18 @@ site: site/dist
 
 tfwatch:
 	@echo "[build] Building tfwatch"
-	docker run --rm \
-		-w /usr/local/go/src/github.com/webdevwilson/tfwatch \
-		-v $(WD):/usr/local/go/src/github.com/webdevwilson/tfwatch \
-		golang:$(GOLANG_VERSION) \
-		go build -o tfwatch main.go
+	docker run $(DOCKER_OPTS) go build -o tfwatch main.go
 
 build: tfwatch
-	
+
 install: build
 	@echo "[install] Installing tfwatch to $(GOPATH)/bin"
 	@mkdir -p $(GOPATH)/bin
 	@cp tfwatch $(GOPATH)/bin/
+
+serve:
+	@echo "[serve]"
+	docker run $(DOCKER_OPTS) -p 3000:3000 go run main.go $(DOCKER_DIR)/fixtures
 
 docker: build site
 	docker build -t $(DOCKER_NAME) .

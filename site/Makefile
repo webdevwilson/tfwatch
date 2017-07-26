@@ -9,4 +9,4 @@ dist: deps
 
 default: dist
 
-.PHONY: deps
+.PHONY: deps default

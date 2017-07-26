@@ -12,12 +12,10 @@ import (
 
 func init() {
 	registrationCh <- func(s *server) {
-		// _escFS is generated in site_static.go from source in site/dist
 		fs := http.FileServer(http.Dir(s.siteDir))
-
 		s.registerEndpoint("GET", "/", redirectRoot)
-		s.registerEndpoint("GET", "/site/{path:.*}", prefix("/site", fs))
-		s.registerEndpoint("GET", "/dist/{path:.*}", prefix("/site/dist", fs))
+		s.registerEndpoint("GET", "/site/{path:.*}", prefix("/", fs))
+		s.registerEndpoint("GET", "/dist/{path:.*}", prefix("/dist", fs))
 	}
 }
 
@@ -34,5 +32,6 @@ func prefix(prefix string, h http.Handler) http.HandlerFunc {
 
 // redirectRoot sends a redirect for root url requests
 func redirectRoot(resp http.ResponseWriter, req *http.Request) {
+	log.Printf("[DEBUG] Redirecting root request")
 	http.Redirect(resp, req, "/site/index.html#", http.StatusTemporaryRedirect)
 }

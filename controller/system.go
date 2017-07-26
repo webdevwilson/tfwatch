@@ -15,16 +15,16 @@ type SystemConfigurationValue struct {
 }
 
 type System interface {
-	GetConfiguration() []*SystemConfigurationValue
+	GetConfiguration() []SystemConfigurationValue
 }
 
 type systemController struct {
-	config   []*SystemConfigurationValue
+	config   []SystemConfigurationValue
 	executor execute.Executor
 }
 
 // NewSystemController creates a new controller for working with system information
-func NewSystemController(config []*SystemConfigurationValue, executor execute.Executor) System {
+func NewSystemController(config []SystemConfigurationValue, executor execute.Executor) System {
 
 	sys := &systemController{
 		config:   config,
@@ -36,7 +36,7 @@ func NewSystemController(config []*SystemConfigurationValue, executor execute.Ex
 	return sys
 }
 
-func (s *systemController) GetConfiguration() []*SystemConfigurationValue {
+func (s *systemController) GetConfiguration() []SystemConfigurationValue {
 	return s.config
 }
 
@@ -52,7 +52,7 @@ func (s *systemController) terraformVersion() {
 
 	r := <-st.Channel
 
-	s.config = append(s.config, &SystemConfigurationValue{
+	s.config = append(s.config, SystemConfigurationValue{
 		ID:    "TerraformVersion",
 		Name:  "Terraform Version",
 		Value: strings.TrimSpace(string(r.Output)),
